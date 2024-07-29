@@ -68,6 +68,8 @@
 (global-visual-line-mode 1)
 (set-fringe-mode 10)
 (global-display-line-numbers-mode t)
+(menu-bar-mode -1)
+(scroll-bar-mode -1)
 
 (use-package doom-modeline
   :straight t
@@ -75,6 +77,15 @@
   (doom-modeline-mode 1)
   (setq doom-modeline-enable-word-count t
 	doom-mode-line-continuous-word-count-modes '(org-mode markdown-mode)))
+
+;; eventually going to want to work with general package for keybindings
+(use-package general
+   :straight t
+;;   :config
+   ;;   (load "~/.emacs.d/keybinds.el")
+   ) 
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup by system ;;
@@ -94,14 +105,14 @@
   )
 
 (when (eq system-type 'gnu/linux)
-  (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 36"))
-  (set-face-attribute 'default t :font "IBM Plex Mono 36")
+  (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 11"))
+  (set-face-attribute 'default t :font "IBM Plex Mono 11")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
     (setq initial-frame-alist
 	'((top . 0) (left . 0) (height . 65) (width . 80)))
-    (set-face-attribute 'default nil :font "IBM Plex Mono 36")
+    (set-face-attribute 'default nil :font "IBM Plex Mono 11")
     (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
@@ -195,8 +206,8 @@
 ;; recent files 
 (require 'recentf)
 (recentf-mode 1)
-(setq recentf-max-menu-items 25)
-(setq recentf-max-saved-items 25)
+(setq recentf-max-menu-items 50)
+(setq recentf-max-saved-items 50)
 (keymap-global-set "C-c f r" 'recentf-open)
 
 ;; lsp
