@@ -62,7 +62,8 @@
 (setq initial-scratch-message nil)
 (setq visible-bell t)
 (setq warning-minimum-level :emergency)
- 
+(setq confirm-kill-processes nil)
+
 (tool-bar-mode -1)
 (global-visual-line-mode 1)
 (set-fringe-mode 10)
@@ -488,33 +489,34 @@
 
 (use-package ess
   :straight t
-  :hook
+  :init
+  (setq ess-style 'RStudio
+	ess-use-flymake nil)
   (ess-r-mode . electric-pair-mode)
   (inferior-ess-r-mode . electric-pair-mode)
+  :config
+  (setq ess-ask-for-ess-director nil)
   (setq ess-R-font-lock-keywords
 	'((ess-R-fl-keyword:modifiers . t)
                       (ess-R-fl-keyword:fun-defs . t)
                       (ess-R-fl-keyword:keywords . t)
                       (ess-R-fl-keyword:assign-ops . t)
                       (ess-R-fl-keyword:constants . t)
-                       (ess-fl-keyword:fun-calls . t)
+                      (ess-fl-keyword:fun-calls . t)
                       (ess-fl-keyword:numbers . t)
                       (ess-fl-keyword:operators . t)
                       (ess-fl-keyword:delimiters)
                       (ess-fl-keyword:= . t)
                       (ess-R-fl-keyword:F&T . t)
                       (ess-R-fl-keyword:%op% . t)))
-  (setq ess-use-flymake nil
-	ess-style 'RStudio
-	ess-offset-continued 2
-	comint-scroll-to-bottom-on-output t
-	)
   )
 
 (use-package ess-view-data
   :straight t
   )
-
+(use-package polymode
+  :straight t
+  )
 (use-package poly-R
   :straight t
   :map (:localleader
@@ -527,6 +529,15 @@
          :desc "Next" "n" 'polymode-next-chunk
          :desc "Previous" "p" 'polymode-previous-chunk)
   )
+(use-package poly-markdown
+  :straight t
+  )
+
+;; R modes
+(add-to-list 'auto-mode-alist '("\\.Snw" . poly-noweb+r-mode))
+(add-to-list 'auto-mode-alist '("\\.Rnw" . poly-noweb+r-mode))
+(add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
+(add-to-list 'auto-mode-alist '("\\.qmd" . poly-markdown+r-mode))
 
 ;; cribbed from doom
 
