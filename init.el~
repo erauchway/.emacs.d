@@ -58,9 +58,6 @@
 (keymap-global-set "C-c n d" 'deft)
 (keymap-global-set "C-c n a" 'org-agenda)
 (keymap-global-set "C-c C-x C-c" 'citar-insert-citation)
-(keymap-global-set "C-c l e b" 'eval-buffer)
-(keymap-global-set "C-c n r d t" 'org-roam-dailies-goto-today)
-(keymap-global-set "C-c n r d y" 'org-roam-dailies-goto-yesterday)
 
 ;;;;;;;;;;;;;;;;
 ;; Appearance ;;
@@ -93,6 +90,15 @@
   (setq doom-modeline-enable-word-count t
 	doom-mode-line-continuous-word-count-modes '(org-mode markdown-mode)))
 
+;; eventually going to want to work with general package for keybindings
+(use-package general
+   :straight t
+;;   :config
+   ;;   (load "~/.emacs.d/keybinds.el")
+   ) 
+
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup by system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -123,6 +129,8 @@
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   )
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; various necessities ;;
@@ -211,6 +219,7 @@
 (setq recentf-max-menu-items 100)
 (setq recentf-max-saved-items 100)
 
+
 ;; lsp
 (use-package lsp-mode
   :straight t
@@ -252,7 +261,6 @@
         deft-recursive t
 	deft-use-filename-as-title t))
 
-;; pdf utilites
 
 (use-package pdf-tools
   :straight t
@@ -306,6 +314,7 @@
 				      ("DONE" . "#3d5941")
 				      ("PROJ" . "#A16928")))
 	))
+
 (use-package emacsql
   :straight t
   :defer nil)
@@ -313,6 +322,7 @@
   :after emacsql
   :straight t
   :defer nil)
+
 (use-package org-roam
   :straight t
   :after org
@@ -325,12 +335,16 @@
          "* %?"
          :target (file+head "%<%Y-%m-%d>.org"
                             "#+title: %<%Y-%m-%d>\n"
-                            )))
-	)
+                            )
+
+         )
+        )
+						  )
   (org-roam-db-autosync-mode)
-  )
+ )
 
 (setq org-agenda-window-setup (quote current-window))
+
 (use-package org-super-agenda
   :straight t
   :after org-agenda
@@ -358,7 +372,7 @@
                                                (tags . " %s %t ")
                                                (search . " - ")))
 
-;; borrowed from Https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
+;; borrowed from https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
               (setq org-agenda-custom-commands
                     '(("z" "Super view"
                        (
@@ -367,7 +381,7 @@
                                      '(
                                        (:name ""
                                         :time-grid t
-                                        ;; :log t
+                                        :log t
                                         :date today
                                         :order 1
                                         :discard (:anything))
@@ -401,8 +415,7 @@
 
                                         ))))))))
               :config
-              (org-super-agenda-mode)
-	      )
+              (org-super-agenda-mode))
 
 ;; org-noter
 (use-package org-noter
@@ -414,6 +427,7 @@
 	org-noter-separate-notes-from-heading t
 	org-noter-always-create-frame nil)
   )
+
 ;; org exporters
 (require 'ox)
 (defun sa-ignore-headline (contents backend info)
@@ -467,6 +481,7 @@
                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
                ("\\paragraph{%s}" . "\\paragraph*{%s}")
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+
 )
 
 ;; for reveal presentations
@@ -476,21 +491,23 @@
   (setq org-reveal-root "~/OneDrive/teaching/h174b/theme/reveal.js")
   )
 
-;; citations
 (use-package citar
   :straight t
   )
+
 (setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.bib"))
 (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
 (setq citar-bibliography '("~/OneDrive/common/big_bib.bib"))
 
-;; quarto essentials
+
 (use-package quarto-mode
   :straight t
   )
+
 (use-package markdown-mode
   :straight t
   )
+
 (use-package ess
   :straight t
   :init
@@ -514,6 +531,7 @@
                       (ess-R-fl-keyword:F&T . t)
                       (ess-R-fl-keyword:%op% . t)))
   )
+
 (use-package ess-view-data
   :straight t
   )
@@ -543,6 +561,7 @@
 (add-to-list 'auto-mode-alist '("\\.qmd" . poly-markdown+r-mode))
 
 ;; cribbed from doom
+
 (defun +org-realign-table-maybe-h ()
   "Auto-align table under cursor."
   (when (and org-table-automatic-realign (org-at-table-p) org-table-may-need-update)
@@ -564,6 +583,15 @@ Meant for `org-mode-hook'."
   (when (eq major-mode 'org-mode)
     (+org-realign-table-maybe-h)))
 
+
+;; very basic pdf setup
+(defun pdf-take-notes-windows ()
+  (interactive)
+  (delete-other-windows)
+  (split-window-horizontally)
+  (other-window 1)
+  (org-roam-dailies-goto-today)
+  )
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
