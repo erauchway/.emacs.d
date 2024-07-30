@@ -2,3 +2,5 @@ straight/
 undo-fu-session/
 org-roam.db
 auto-save-list/
+recentf
+eln-cache/
