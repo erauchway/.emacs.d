@@ -17,26 +17,22 @@
 	 'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
-  (load bootstrap-file nil 'nomessage))
-
+  (load bootstrap-file nil 'nomessage)
+  )
 (setq package-enable-at-startup nil)
-
 ;; Use-package
 (straight-use-package 'use-package)
-
 (require 'use-package)
-
 ;; Undo
 (use-package undo-fu
   :straight t)
-
 (use-package undo-fu-session
   :straight t
   :config
   (setq undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
   :init
-  (undo-fu-session-global-mode))
-
+  (undo-fu-session-global-mode)
+  )
 ;; Which key
 (use-package which-key
   :straight t
@@ -44,7 +40,6 @@
   (which-key-mode)
   (setq which-key-popup-type 'minibuffer
 	max-mini-window-height 0.5))
-
 ;; use GNU coreutils version of ls, which cooperates better with dired
 (setq insert-directory-program "gls") 
 
@@ -61,6 +56,7 @@
 (keymap-global-set "C-c l e b" 'eval-buffer)
 (keymap-global-set "C-c n r d t" 'org-roam-dailies-goto-today)
 (keymap-global-set "C-c n r d y" 'org-roam-dailies-goto-yesterday)
+(keymap-global-set "C-c o t" 'vterm-other-window)
 
 ;;;;;;;;;;;;;;;;
 ;; Appearance ;;
@@ -70,46 +66,44 @@
   :straight t
   :config
   (load-theme 'gruvbox-dark-soft t))
-
-
 ;; Starting buffer
 (setq inhibit-startup-message t) 
 (setq initial-scratch-message nil)
 (setq visible-bell t)
 (setq warning-minimum-level :emergency)
 (setq confirm-kill-processes nil)
-
 (tool-bar-mode -1)
 (global-visual-line-mode 1)
 (set-fringe-mode 10)
 (global-display-line-numbers-mode t)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
-
 (use-package doom-modeline
   :straight t
   :init
   (doom-modeline-mode 1)
   (setq doom-modeline-enable-word-count t
-	doom-mode-line-continuous-word-count-modes '(org-mode markdown-mode)))
+	doom-mode-line-continuous-word-count-modes '(org-mode markdown-mode))
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup by system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
+
 (when (eq system-type 'darwin)
   (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 14"))
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
   (set-face-attribute 'default t :font "IBM Plex Mono 14")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
-    (setq initial-frame-alist
-	'((top . 0) (left . 0) (height . 65) (width . 80)))
+;;    (setq initial-frame-alist
+;;	'((top . 0) (left . 0) (height . 65) (width . 80)))
     (set-face-attribute 'default nil :font "IBM Plex Mono 14")
     (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   )
-
 (when (eq system-type 'gnu/linux)
   (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 14"))
   (set-face-attribute 'default t :font "IBM Plex Mono 14")
@@ -132,7 +126,6 @@
 (setq calendar-date-style 'iso)
 (setq diary-file "~/OneDrive/org/diary")
 (add-hook 'diary-list-entries-hook 'diary-sort-entries t)
-
 ;;completion
 (use-package company
   :straight t
@@ -146,9 +139,8 @@
 	   company-keywords
 	   company-capf
 	   company-yasnippet)
-	  (company-abbrev company-dabbrev))))
-
-
+	  (company-abbrev company-dabbrev)))
+  )
 (setq hippie-expand-try-functions-list
 	'(try-complete-file-name-partially
 	  try-complete-file-name
@@ -160,8 +152,8 @@
 	  try-expand-whole-kill
 	  try-complete-lisp-symbol-partially
 	  try-complete-lisp-symbol
-	  ))
-
+	  )
+	)
 (use-package vertico
   :straight t
   :init (vertico-mode)
@@ -169,29 +161,27 @@
   (setq read-file-name-completion-ignore-case t
 	read-buffer-completion-ignore-case t
 	completion-ignore-case t
-	vertico-resize nil))
-
+	vertico-resize nil)
+  )
 (use-package marginalia
   :straight t
   :after (vertico)
-  :init (marginalia-mode))
-
+  :init (marginalia-mode)
+  )
 (use-package all-the-icons
   :straight t
   :if (display-graphic-p))
-
 (use-package all-the-icons-completion
   :straight t
   :after marginalia
   :hook (marginalia-mode-hook . all-the-icons-completion-marginalia-setup)
   :init (all-the-icons-completion-mode))
-
 (use-package all-the-icons-dired
   :straight t
   :after (all-the-icons)
   :config
-  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode))
-
+  (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
+  )
 ;; delimiter highlighting
 (use-package rainbow-delimiters
   :straight t
@@ -201,16 +191,18 @@
 	 (inferior-ess-r-mode . rainbow-delimiters-mode)
 	 (markdown-mode . rainbow-delimiters-mode))
   )
-
 (use-package rainbow-mode
-  :straight t)
-
+  :straight t
+  )
+;; terminal emulation
+(use-package vterm
+  :straight t
+  )
 ;; recent files 
 (require 'recentf)
 (recentf-mode 1)
 (setq recentf-max-menu-items 100)
 (setq recentf-max-saved-items 100)
-
 ;; lsp
 (use-package lsp-mode
   :straight t
@@ -226,23 +218,21 @@
   :hook ((ess-r-mode . lsp)
 	 (inferior-ess-r-mode . lsp))
   )
-
 (use-package lsp-ui
   :straight t
   :commands (lsp-ui-mode)
   :config
   (setq lsp-ui-doc-enable nil
-	lsp-ui-doc-delay 0.5))
-
+	lsp-ui-doc-delay 0.5)
+  )
 (use-package lsp-treemacs
   :straight t
-  :commands lsp-treemacs-errors-list)
-
+  :commands lsp-treemacs-errors-list
+  )
 ;; snippets
 (use-package yasnippet
   :straight t
   :hook ((lsp-mode . yas-minor-mode)))
-
 ;; deft for org search
 (use-package deft
   :straight t
@@ -250,10 +240,9 @@
   (setq deft-extensions '("org" "md" "qmd" "rmd"))
   (setq deft-directory "~/OneDrive/org"
         deft-recursive t
-	deft-use-filename-as-title t))
-
+	deft-use-filename-as-title t)
+  )
 ;; pdf utilites
-
 (use-package pdf-tools
   :straight t
   :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
@@ -271,7 +260,7 @@
 ;; make all org files possible refile targets
 ;; solution here: https://emacs.stackexchange.com/questions/64319/refile-to-non-agenda-files
 (defun org-refile-candidates () (directory-files-recursively "~/OneDrive/" "^[[:alnum:]].*\\.org\\'"))
-
+;; org and others
 (use-package org
   :straight t (:type built-in)
   :hook ((org-mode . +org-enable-auto-reformat-tables-h)
@@ -304,8 +293,8 @@
 				      ("IDEA" . "#8BE0A4")
 				      ("STARTED" . "#b5b991")
 				      ("DONE" . "#3d5941")
-				      ("PROJ" . "#A16928")))
-	))
+				      ("PROJ" . "#A16928"))))
+  )
 (use-package emacsql
   :straight t
   :defer nil)
@@ -329,7 +318,6 @@
 	)
   (org-roam-db-autosync-mode)
   )
-
 (setq org-agenda-window-setup (quote current-window))
 (use-package org-super-agenda
   :straight t
@@ -357,7 +345,6 @@
                                                (todo . "  %(let ((scheduled (org-get-scheduled-time (point)))) (if scheduled (format-time-string \"%Y-%m-%d %I:%M %p\" scheduled) \"\")) ")
                                                (tags . " %s %t ")
                                                (search . " - ")))
-
 ;; borrowed from Https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
               (setq org-agenda-custom-commands
                     '(("z" "Super view"
@@ -387,7 +374,6 @@
                                                :order 7)
                                         (:name "Soonest"
                                                :priority "A"
-
                                         )
                                         (:name "Secondary"
                                                :priority "B"
@@ -398,12 +384,10 @@
                                         ;;(:auto-group t)
                                         ;;(:auto-priority t)
                                         (:discard (:anything))
-
                                         ))))))))
               :config
               (org-super-agenda-mode)
 	      )
-
 ;; org-noter
 (use-package org-noter
   :straight t
@@ -412,7 +396,8 @@
   (setq org-noter-notes-search-path '("~/OneDrive/org/roam/")
 	org-noter-hide-other nil
 	org-noter-separate-notes-from-heading t
-	org-noter-always-create-frame nil)
+	org-noter-always-create-frame nil
+	org-noter-auto-save-last-location t)
   )
 ;; org exporters
 (require 'ox)
@@ -433,7 +418,6 @@
   ;; tell org export to delete, among other temporary tex files, those marked bbl and tex
   (add-to-list 'org-latex-logfiles-extensions "bbl")
   (add-to-list 'org-latex-logfiles-extensions "tex")
-
 ;; for ox-latex
 (with-eval-after-load 'ox-latex
 (add-to-list 'org-latex-classes
@@ -468,14 +452,12 @@
                ("\\paragraph{%s}" . "\\paragraph*{%s}")
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 )
-
 ;; for reveal presentations
 (use-package ox-reveal
   :straight t
   :config
   (setq org-reveal-root "~/OneDrive/teaching/h174b/theme/reveal.js")
   )
-
 ;; citations
 (use-package citar
   :straight t
@@ -483,7 +465,6 @@
 (setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.bib"))
 (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
 (setq citar-bibliography '("~/OneDrive/common/big_bib.bib"))
-
 ;; quarto essentials
 (use-package quarto-mode
   :straight t
@@ -535,13 +516,11 @@
 (use-package poly-markdown
   :straight t
   )
-
 ;; R modes
 (add-to-list 'auto-mode-alist '("\\.Snw" . poly-noweb+r-mode))
 (add-to-list 'auto-mode-alist '("\\.Rnw" . poly-noweb+r-mode))
 (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
 (add-to-list 'auto-mode-alist '("\\.qmd" . poly-markdown+r-mode))
-
 ;; cribbed from doom
 (defun +org-realign-table-maybe-h ()
   "Auto-align table under cursor."
@@ -549,28 +528,28 @@
     (let ((pt (point))
           (inhibit-message t))
       (if org-table-may-need-update (org-table-align))
-      (goto-char pt))))
-
+      (goto-char pt)))
+  )
 (defun +org-enable-auto-reformat-tables-h ()
   "Realign tables & update formulas when exiting insert mode (`evil-mode').
 Meant for `org-mode-hook'."
   (when (featurep 'evil)
     (add-hook 'evil-insert-state-exit-hook #'+org-realign-table-maybe-h nil t)
     (add-hook 'evil-replace-state-exit-hook #'+org-realign-table-maybe-h nil t)
-    (advice-add #'evil-replace :after #'+org-realign-table-maybe-a)))
-
+    (advice-add #'evil-replace :after #'+org-realign-table-maybe-a))
+  )
 (defun +org-realign-table-maybe-a (&rest _)
   "Auto-align table under cursor and re-calculate formulas."
   (when (eq major-mode 'org-mode)
-    (+org-realign-table-maybe-h)))
-
+    (+org-realign-table-maybe-h))
+  )
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a" "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3" default)))
+   '("871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8" "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a" "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3" default)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
