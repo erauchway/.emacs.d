@@ -203,36 +203,10 @@
 (recentf-mode 1)
 (setq recentf-max-menu-items 100)
 (setq recentf-max-saved-items 100)
-;; lsp
-(use-package lsp-mode
-  :straight t
-  :commands lsp
-  :config
-  (setq gc-cons-threshold (* 100 1024 1024)
-	read-process-output-max (* 1024 1024)
-	treemacs-space-between-root-nodes nil
-	company-idle-delay 0.0
-	company-minimum-prefix-length 1
-	lsp-idle-delay 0.1
-	lsp-lens-enable nil) ;; attempt to address CPU intensity
-  :hook ((ess-r-mode . lsp)
-	 (inferior-ess-r-mode . lsp))
-  )
-(use-package lsp-ui
-  :straight t
-  :commands (lsp-ui-mode)
-  :config
-  (setq lsp-ui-doc-enable nil
-	lsp-ui-doc-delay 0.5)
-  )
-(use-package lsp-treemacs
-  :straight t
-  :commands lsp-treemacs-errors-list
-  )
 ;; snippets
 (use-package yasnippet
   :straight t
-  :hook ((lsp-mode . yas-minor-mode)))
+   )
 ;; deft for org search
 (use-package deft
   :straight t
@@ -465,11 +439,13 @@
 (setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.bib"))
 (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
 (setq citar-bibliography '("~/OneDrive/common/big_bib.bib"))
-;; quarto essentials
-(use-package quarto-mode
+(use-package markdown-mode
   :straight t
   )
-(use-package markdown-mode
+(use-package request
+  :straight t
+  )
+(use-package yaml-mode
   :straight t
   )
 (use-package ess
@@ -516,12 +492,13 @@
 (use-package poly-markdown
   :straight t
   )
-;; R modes
-(add-to-list 'auto-mode-alist '("\\.Snw" . poly-noweb+r-mode))
-(add-to-list 'auto-mode-alist '("\\.Rnw" . poly-noweb+r-mode))
-(add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
-(add-to-list 'auto-mode-alist '("\\.qmd" . poly-markdown+r-mode))
-;; cribbed from doom
+;; quarto essentials
+(use-package quarto-mode
+  :straight t
+  :mode (("\\.rmd" . poly-quarto-mode))
+  :mode (("\\.qmd" . poly-quarto-mode))
+  )
+;; doom cribs
 (defun +org-realign-table-maybe-h ()
   "Auto-align table under cursor."
   (when (and org-table-automatic-realign (org-at-table-p) org-table-may-need-update)
