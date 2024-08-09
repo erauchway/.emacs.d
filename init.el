@@ -23,6 +23,15 @@
 ;; Use-package
 (straight-use-package 'use-package)
 (require 'use-package)
+;; recent files 
+(use-package 'recentf
+  :init
+  (recentf-mode 1)
+  (setq recentf-max-menu-items 50)
+  (setq recentf-max-saved-items 50)
+  (run-at-time (current-time) 300 'recentf-save-list)
+  (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/OneDrive/org/roam/daily/*.org"))))
+  )
 ;; Undo
 (use-package undo-fu
   :straight t)
@@ -42,6 +51,7 @@
 	max-mini-window-height 0.5))
 ;; use GNU coreutils version of ls, which cooperates better with dired
 (setq insert-directory-program "gls") 
+
 
 ;;;;;;;;;;
 ;; keys ;;
@@ -154,14 +164,18 @@
 	  try-complete-lisp-symbol
 	  )
 	)
-(use-package vertico
+ (use-package vertico
+   :straight t
+   :init (vertico-mode)
+   :config
+   (setq read-file-name-completion-ignore-case t
+ 	read-buffer-completion-ignore-case t
+ 	completion-ignore-case t
+ 	vertico-resize nil)
+   )
+(use-package consult
   :straight t
-  :init (vertico-mode)
-  :config
-  (setq read-file-name-completion-ignore-case t
-	read-buffer-completion-ignore-case t
-	completion-ignore-case t
-	vertico-resize nil)
+  :after (vertico)
   )
 (use-package marginalia
   :straight t
@@ -198,11 +212,10 @@
 (use-package vterm
   :straight t
   )
-;; recent files 
-(require 'recentf)
-(recentf-mode 1)
-(setq recentf-max-menu-items 100)
-(setq recentf-max-saved-items 100)
+;; ido
+(setq ido-enable-flex-matching t)
+(setq ido-everywhere t)
+(ido-mode 1)
 ;; snippets
 (use-package yasnippet
   :straight t
@@ -219,7 +232,7 @@
 ;; pdf utilites
 (use-package pdf-tools
   :straight t
-  :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
+  ;; :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
   :config
   (pdf-tools-install)
   (setq default pdf-view-display-size 'fit-width)
@@ -231,9 +244,9 @@
 ;; org ;;
 ;;;;;;;;;
 
-;; make all org files possible refile targets
-;; solution here: https://emacs.stackexchange.com/questions/64319/refile-to-non-agenda-files
-(defun org-refile-candidates () (directory-files-recursively "~/OneDrive/" "^[[:alnum:]].*\\.org\\'"))
+;; https://emacs.stackexchange.com/questions/64319/refile-to-non-agenda-files
+(defun org-candidate-files () (directory-files-recursively "~/OneDrive" "^[[:alnum::]].*\\.org\\'"))
+
 ;; org and others
 (use-package org
   :straight t (:type built-in)
@@ -241,9 +254,15 @@
 	 (org-mdoe . org-indent-mode))
   :config
   (setq org-directory "~/OneDrive/org"
+	org-odt-preferred-output-format "docx"
+	org-odt-styles-file "~/OneDrive/common/reference.odt"
 	org-agenda-files (quote("~/OneDrive/org/roam/daily"
 				"~/OneDrive/org/roam"))
-	org-refile-targets (quote (org-refile-candidates :maxlevel . 3))
+	org-adapt-indentation t
+	org-hide-leading-stars t
+	org-refile-targets '((org-refile-candidates :maxlevel . 3))
+	org-refile-use-outline-path t
+	org-outline-path-complete-in-steps t
 	org-todo-keywords (quote ((sequence "TODO(t)"
 					    "PROJ(p)"
 					    "LOOP(r)"
@@ -269,6 +288,10 @@
 				      ("DONE" . "#3d5941")
 				      ("PROJ" . "#A16928"))))
   )
+(with-eval-after-load "org"
+  (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
+  (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\"")))
+;; getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
 (use-package emacsql
   :straight t
   :defer nil)
@@ -286,8 +309,8 @@
 	org-roam-dailies-directory "~/OneDrive/org/roam/daily/"
 	org-roam-dailies-capture-templates '(("d" "default" entry
          "* %?"
-         :target (file+head "%<%Y-%m-%d>.org"
-                            "#+title: %<%Y-%m-%d>\n"
+         :target (file+head "%<%Y-%m-%d>-daily.org"
+                            "#+title: %<%Y-%m-%d>-daily.org\n"
                             )))
 	)
   (org-roam-db-autosync-mode)
@@ -436,11 +459,13 @@
 (use-package citar
   :straight t
   )
-(setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.bib"))
+(setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.json"))
 (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
-(setq citar-bibliography '("~/OneDrive/common/big_bib.bib"))
+(setq citar-bibliography '("~/OneDrive/common/big_bib.json"))
 (use-package markdown-mode
   :straight t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown")
   )
 (use-package request
   :straight t
@@ -495,8 +520,8 @@
 ;; quarto essentials
 (use-package quarto-mode
   :straight t
-  :mode (("\\.rmd" . poly-quarto-mode))
-  :mode (("\\.qmd" . poly-quarto-mode))
+  ;;:mode (("\\.rmd" . poly-quarto-mode))
+  ;;:mode (("\\.qmd" . poly-quarto-mode))
   )
 ;; doom cribs
 (defun +org-realign-table-maybe-h ()
