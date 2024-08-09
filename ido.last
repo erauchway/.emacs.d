@@ -2,6 +2,9 @@
 
 ;; ----- ido-last-directory-list -----
 (
+ ("/home/rauchway/OneDrive/writing_proj/" . "2024-09-01_vico_revision/")
+ ("/home/rauchway/OneDrive/" . "writing_proj/")
+ ("/home/rauchway/" . ".emacs.d/")
  ("/Users/earauchway/" . "OneDrive/")
  ("/Users/earauchway/OneDrive/writing_proj/" . "2024-09-01_vico_revision/")
  ("/Users/earauchway/OneDrive/" . "writing_proj/")
@@ -9,6 +12,8 @@
 
 ;; ----- ido-work-directory-list -----
 (
+ "/home/rauchway/OneDrive/writing_proj/2024-09-01_vico_revision/"
+ "/home/rauchway/.emacs.d/"
  "/Users/earauchway/OneDrive/writing_proj/2024-09-01_vico_revision/"
  "/Users/earauchway/.emacs.d/"
  "/Users/earauchway/OneDrive/org/"
@@ -20,6 +25,8 @@
 (
  "vico_revision.qmd"
  "init.el"
+ "vico_revision.org"
+ "Government Rum.docx"
  "recentf"
  "test.el"
  "todo.org"
@@ -30,6 +37,20 @@
 
 ;; ----- ido-dir-file-cache -----
 (
+ ("/home/rauchway/.emacs.d/" (26294 20516 622836 412000) "ido.last~" "auto-save-list/" ".gitignore" "./" ".git/" "straight/" "../" "recentf" "undo-fu-session/" "eln-cache/" "init.el" "session.10872b55fcf8c3919d172322098034900600000025890090" "ido.last" "README.md")
+
+ ("/home/" (26112 22148 936248 353000) "partimag/" "./" "dssadmin/" "../" "rauchway/")
+
+ ("/home/rauchway/.emacs-wait.d/" (26211 21783 447016 52000) "shell.nix" "LICENSE" ".dir-locals.el" "auto-save-list/" ".gitignore" "./" "profiles/" ".git/" "docs/" ".local/" "../" "modules/" "eln-cache/" ".github/" "templates/" "early-init.el" "bin/" ".doomrc" "lisp/" "README.md")
+
+ ("/home/rauchway/OneDrive/writing_proj/2024-09-01_vico_revision/" (26294 20043 476812 799000) "vandycomments.org" "vico_revision.docx" "vanderbilt.org" "vandynotes.org" "./" "vico_revision.qmd" "vico_revision.odt" "Government Rum.docx" "../" "stx_notes.org" "2024-08-19_nara_cp.xlsx" "vico_revision.org~" "vandycomments2.org" "vandycomments3.org" "vico_revision.org" "USVI-Rauchway Olmsted.pdf" "NARA docs/" "Advance Pull Template.xlsx" "#vico_revision.qmd#" "Rauchway Olmstead Advance Pull Template.xlsx" "vico_revision.doc" "How the New Deal Was Run author comments.Olmsted & Rauchway.docx" "2024-08-19_nara_cp.csv" "2024-08-19_nara_cp.org")
+
+ ("/home/rauchway/" (26294 17559 535285 992000) ".bashrc" ".sh_history" "Zotero/" ".bash_login" "snap/" "Templates/" "Desktop/" "Videos/" ".pulsesecure/" ".config/" "./" "Music/" ".pki/" ".local/" ".lesshst" ".thunderbird/" "maestral-venv/" "Dropbox/" ".ssh/" "../" "opt/" "Screenshots/" "R/" "Public/" ".Rhistory" "Documents/" ".cache/" ".r/" ".viminfo" ".emacs.d/" ".wget-hsts" ".mozilla/" ".zotero/" ".var/" ".npm/" ".gnupg/" "bin/" ".nvidia-settings-rc" ".gitconfig" ".bash_history" ".profile" "Trash/" ".cups/" ".doom.d/" "Pictures/" ".bash_logout" "OneDrive/" "tmp/" ".fonts/" ".sudo_as_admin_successful" "Downloads/" ".emacs-wait.d/")
+
+ ("/home/rauchway/OneDrive/writing_proj/" (26294 15888 692658 59000) "2024-06-17_jph_referee/" "2024-04-28_mellon_application/" "move_it.sh" "2024-09-01_vico_revision/" "2024-06-21_acgh_17B/" "_outputs/" "2024-04-19_Vandy_USVI/" "./" "2024-04-28_his_enroll/" "2024-04-28_blower/" "writing_proj.Rproj" "2024-08-01_wine_pcb_hi/" "2024-05-14_freeman_eval/" "../" ".Rhistory" "theme/" "2024-05-27_warren_eval/" "2024-05-10_chuck_eval/" "2024-05-20_VI_IPUMS_app/" "2024-06-18_leighninger_ku_referee/" ".quarto/" "mai_tai_guide_pub/" "2024-03-05_lat_request/" "2024-05-05_jwr_protests/" "2024-07-16_govt_house_murals/" "2024-07-15_thomas_dissertation/" "2024-07-03_connelly_rah/" "2024-02-12_wine_proposal/" "_quarto.yml" "2024-04-28_ama_myth/" "2024-04-28_sabbatical_statement/" "2024-04-28_kso_sah/" "2024-04-28_mellon_statement/" "2024-09-08_frontiers/" ".Rproj.user/" "2023-10-10_mai_tai_guide/" "2024-04-28_davis_merit/" "2024-04-28_tls_handover/" "2024-04-28_rethinking_review/" "2024-05-21_honors_form/")
+
+ ("/home/rauchway/OneDrive/" (26294 15882 992711 836000) "start.R" "Users/" "mapsncharts/" "fonts/" "teaching/" "erauchway.github.io/" "keybinds.el" "writing_proj/" "#.849C9593-D756-4E56-8D6E-42412F2A707B#" "Eric @ Work/" "./" "library/" "tests/" "ucd_letters/" "syllabuses/" "../" "Shared with Everyone/" "Apps/" "data/" "media/" "org/" "cv_work/" "2024--2025_01_teaching/" "common/" "archived/" "present/" "Attachments/")
+
  ("/Users/earauchway/OneDrive/" (26292 12602 980171 155000) "media/" "mapsncharts/" "Eric @ Work.url" ".849C9593-D756-4E56-8D6E-42412F2A707B" "Apps/" "data/" "fonts/" "Attachments/" "erauchway.github.io/" "Users/" "teaching/" "syllabuses/" "common/" "2024--2025_01_teaching/" "library/" "start.R" "tests/" "ucd_letters/" "#.849C9593-D756-4E56-8D6E-42412F2A707B#" "writing_proj/" "org/" "Shared with Everyone/" "Icon" "cv_work/" ".DS_Store" "present/" "../" "./")
 
  ("/Users/earauchway/OneDrive/org/roam/" (26293 7127 0 0) "nara_sf.org" "Johnson-AntiImperialismGoodNeighbour-1997.org" "20231225130051-hello_world.org" "huipanalaau_5_bell.org~" "batf_notes.org" "invest.org" "huipanalaau_2_sproat.org~" "huipanalaau_2_sproat.org" "huipanalaau_3_knell.org" "munson_public_art_hi.org~" "refereeing.org" "huipanalaau_5_bell.org" "test.qmd" "20231229131847-scott_tva.org" "kennedyWhatNewDeal2009.org" "Record alcohol 2.org" "ala_moana.org~" "huipanalaau_4_kim.org~" "huipanalaau_1_frontmatter_introduction.org~" "retrieve.org~" "hartLabourRebellions1930s2002.org" "ala_moana.org" "todo.org~" "nara_sf_notes.org" "merleauxSugarCivilizationAmerican2015.org" "weissFarewellPartyLincoln1983.org" "service.org" "convoys-alterman.org" "factors in analyzing consumption.org" "daily/" "munson_public_art_hi.org" "shihInvasiveEcologiesScience2019.org" "research.org" "todo-vantablack imac.org" "Johnson-AntiImperialismGoodNeighbour-1997.org~" "todo.org" "vi_notes.org" "dallekFranklinRooseveltAmerican1979.org" "ashanti_shih_invasive_ecologies.org" "griffithBacchusBlackshirtsWine2020a.org" "nara_sf_docs.org" "huipanalaau_1_frontmatter_introduction.org" "wine.org" "huipanalaau_3_knell.org~" "gordonNewDealsBusiness1994.org" "research.org~" "obrienHowWarWas2015a.org" "boca_longa_24.org" "vico.org" ".DS_Store" "huipanalaau_4_kim.org" "index.org" "merleauxSugarCivilizationAmerican2015.org~" "retrieve.org" "20231227103351-test.org" "todo.tex" "../" "./")

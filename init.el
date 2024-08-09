@@ -24,14 +24,14 @@
 (straight-use-package 'use-package)
 (require 'use-package)
 ;; recent files 
-(use-package 'recentf
-  :init
-  (recentf-mode 1)
-  (setq recentf-max-menu-items 50)
-  (setq recentf-max-saved-items 50)
-  (run-at-time (current-time) 300 'recentf-save-list)
-  (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/OneDrive/org/roam/daily/*.org"))))
-  )
+;; (use-package 'recentf
+;;   :init
+;;   (recentf-mode 1)
+;;   (setq recentf-max-menu-items 50)
+;;   (setq recentf-max-saved-items 50)
+;;   (run-at-time (current-time) 300 'recentf-save-list)
+;;   (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/OneDrive/org/roam/daily/*.org"))))
+;;   )
 ;; Undo
 (use-package undo-fu
   :straight t)
@@ -76,6 +76,11 @@
   :straight t
   :config
   (load-theme 'gruvbox-dark-soft t))
+(use-package zenburn-theme
+  :straight t
+  :config
+  (load-theme 'zenburn t)
+  )
 ;; Starting buffer
 (setq inhibit-startup-message t) 
 (setq initial-scratch-message nil)
@@ -115,13 +120,13 @@
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   )
 (when (eq system-type 'gnu/linux)
-  (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 14"))
-  (set-face-attribute 'default t :font "IBM Plex Mono 14")
+  ;;(add-to-list 'default-frame-alist '(font . "IBM Plex Mono 24"))
+  ;;(set-face-attribute 'default t :font "IBM Plex Mono 24")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
-    (setq initial-frame-alist
-	'((top . 0) (left . 0) (height . 65) (width . 80)))
+     (setq initial-frame-alist
+     	'((top . 0) (left . 0) (height . 65) (width . 80)))
     (set-face-attribute 'default nil :font "IBM Plex Mono 14")
     (org-agenda nil "z")
     )
@@ -288,17 +293,31 @@
 				      ("DONE" . "#3d5941")
 				      ("PROJ" . "#A16928"))))
   )
+(use-package ox-odt
+  :straight (org-mode-ox-odt
+	     :host github
+	     :repo "kjambunathan/org-mode-ox-odt"
+	     :files ("lisp/ox-odt.el"
+		     "lisp/odt.el"
+		     "etc"
+		     "docs"
+		     "contrib/odt/LibreOffice"))
+  :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
+  )
 (with-eval-after-load "org"
   (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
-  (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\"")))
+  )
+
 ;; getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
 (use-package emacsql
   :straight t
-  :defer nil)
+  :defer nil
+  )
 (use-package emacsql-sqlite
   :after emacsql
   :straight t
-  :defer nil)
+  :defer nil
+  )
 (use-package org-roam
   :straight t
   :after org
