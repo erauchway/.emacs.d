@@ -260,7 +260,9 @@
   :config
   (setq org-directory "~/OneDrive/org"
 	org-odt-preferred-output-format "docx"
-	org-odt-styles-file "~/OneDrive/common/reference.odt"
+ 	org-odt-styles-file "~/OneDrive/common/reference2.odt"
+	org-odt-use-date-fields t
+	;; org-odt-content-template-file "~/OneDrive/common/odt_content_test.xml"
 	org-agenda-files (quote("~/OneDrive/org/roam/daily"
 				"~/OneDrive/org/roam"))
 	org-adapt-indentation t
@@ -293,21 +295,29 @@
 				      ("DONE" . "#3d5941")
 				      ("PROJ" . "#A16928"))))
   )
-(use-package ox-odt
-  :straight (org-mode-ox-odt
+(require 'ox-odt)
+;; (use-package ox-odt
+;;   :straight t
+;;   ;; see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
+;;   ;; :straight (org-mode-ox-odt
+;;   ;; 	     :host github
+;;   ;; 	     :repo "kjambunathan/org-mode-ox-odt"
+;;   ;; 	     :files ("lisp/ox-odt.el"
+;;   ;; 		     "lisp/odt.el"
+;;   ;; 		     "etc"
+;;   ;; 		     "docs"
+;;   ;; 		     "contrib/odt/LibreOffice"))
+;;   :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
+;;   )
+(use-package ox-pandoc
+  :straight (ox-pandoc
 	     :host github
-	     :repo "kjambunathan/org-mode-ox-odt"
-	     :files ("lisp/ox-odt.el"
-		     "lisp/odt.el"
-		     "etc"
-		     "docs"
-		     "contrib/odt/LibreOffice"))
-  :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
-  )
+	     :repo "emacsorphanage/ox-pandoc"
+	     :files ("ox-pandoc.el"))
+  )  
 (with-eval-after-load "org"
   (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
   )
-
 ;; getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
 (use-package emacsql
   :straight t
