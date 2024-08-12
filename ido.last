@@ -19,8 +19,8 @@
 
 ;; ----- ido-work-directory-list -----
 (
- "/Users/earauchway/OneDrive/common/"
  "/Users/earauchway/.emacs.d/"
+ "/Users/earauchway/OneDrive/common/"
  "/Users/earauchway/.emacs.d/straight/repos/org/etc/styles/"
  "/Users/earauchway/.emacs.d/straight/build/org/etc/styles/"
  "/Users/earauchway/.emacs.d/straight/build/org-mode-ox-odt/etc/styles/"
@@ -36,6 +36,7 @@
 
 ;; ----- ido-work-file-list -----
 (
+ ".gitignore"
  "test_styles.org"
  "init.el"
  "test_styles.odt"
@@ -45,14 +46,13 @@
  "odt_style_test.xml"
  "minim.org"
  "README"
- "vico_revision.odt"
 )
 
 ;; ----- ido-dir-file-cache -----
 (
- ("/Users/earauchway/OneDrive/common/" (26297 19778 172139 615000) "reference2.odt" "reference.docx" "various_header2.org" "crop_tires.jpg" "header.tex" "minim.pdf" "headers_art.org" "big_bib.json" ".auctex-auto/" "syll_header.tex" "cv_bib.json" "odt_content_test.xml~" "big_bib-vico.json" "tables.tex" "odt_style_test.xml" "reference copy.docx.zip" "chicago-author-date.csl" "chicago-fullnote-bibliography-16th-edition.csl" "minim.org" "big_bib.yaml" "chicago-fullnote-bibliography-short-title-subsequent.csl" "chicago-fullnote-bibliography.csl" "ucsealnew_tr.pdf" "syll_styles.scss" "minim.odt" "chicago-fullnote-bibliography-short-title-subsequent-back.csl" "odt_style_test.xml~" "big_bib_back.bib" "test_styles.docx" "headers_let.org" "headshot.jpg" "digisig.png" "styles.xml" "big_bib-tests.json" "test_styles.org" "test.json" "bef_body.tex" "digisig.pdf" "test_styles.org~" "backup_bib.json" "chicago-fullnote-bibliography-short-title-subsequent-ls-240036.csl" "minim.docx" "old.json" "test_styles.odt" "styles.css" "big_bib.bib" "chicago-syllabus.csl" "odt_content_test.xml" "chicago-fullnote-bibliography-with-ibid.csl" "reference.odt" "../" "./")
+ ("/Users/earauchway/.emacs.d/" (26297 20594 50365 918000) "session.10872b55fcf8c3919d172322098034900600000025890090" ".git/" "recentf" "history" ".gitignore" "org-roam.db" "README.md" "init.el" "auto-save-list/" "eln-cache/" "straight/" "tramp" "undo-fu-session/" "ido.last~" "ido.last" "../" "./")
 
- ("/Users/earauchway/.emacs.d/" (26297 19220 551463 657000) "session.10872b55fcf8c3919d172322098034900600000025890090" ".git/" "recentf" ".gitignore" "org-roam.db" "README.md" "init.el" "auto-save-list/" "eln-cache/" "straight/" "undo-fu-session/" "ido.last~" "ido.last" "../" "./")
+ ("/Users/earauchway/OneDrive/common/" (26297 19778 172139 615000) "reference2.odt" "reference.docx" "various_header2.org" "crop_tires.jpg" "header.tex" "minim.pdf" "headers_art.org" "big_bib.json" ".auctex-auto/" "syll_header.tex" "cv_bib.json" "odt_content_test.xml~" "big_bib-vico.json" "tables.tex" "odt_style_test.xml" "reference copy.docx.zip" "chicago-author-date.csl" "chicago-fullnote-bibliography-16th-edition.csl" "minim.org" "big_bib.yaml" "chicago-fullnote-bibliography-short-title-subsequent.csl" "chicago-fullnote-bibliography.csl" "ucsealnew_tr.pdf" "syll_styles.scss" "minim.odt" "chicago-fullnote-bibliography-short-title-subsequent-back.csl" "odt_style_test.xml~" "big_bib_back.bib" "test_styles.docx" "headers_let.org" "headshot.jpg" "digisig.png" "styles.xml" "big_bib-tests.json" "test_styles.org" "test.json" "bef_body.tex" "digisig.pdf" "test_styles.org~" "backup_bib.json" "chicago-fullnote-bibliography-short-title-subsequent-ls-240036.csl" "minim.docx" "old.json" "test_styles.odt" "styles.css" "big_bib.bib" "chicago-syllabus.csl" "odt_content_test.xml" "chicago-fullnote-bibliography-with-ibid.csl" "reference.odt" "../" "./")
 
  ("/Users/earauchway/.emacs.d/straight/repos/org/etc/styles/" (26279 52714 567841 948000) "README" "OrgOdtStyles.xml" "OrgOdtContentTemplate.xml" "../" "./")
 
