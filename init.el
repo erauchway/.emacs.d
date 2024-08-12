@@ -297,16 +297,15 @@
   )
 (require 'ox-odt)
 ;; (use-package ox-odt
-;;   :straight t
-;;   ;; see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
-;;   ;; :straight (org-mode-ox-odt
-;;   ;; 	     :host github
-;;   ;; 	     :repo "kjambunathan/org-mode-ox-odt"
-;;   ;; 	     :files ("lisp/ox-odt.el"
-;;   ;; 		     "lisp/odt.el"
-;;   ;; 		     "etc"
-;;   ;; 		     "docs"
-;;   ;; 		     "contrib/odt/LibreOffice"))
+;; ;;  see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
+;;   :straight (org-mode-ox-odt
+;; 	     :host github
+;; 	     :repo "kjambunathan/org-mode-ox-odt"
+;; 	     :files ("lisp/ox-odt.el"
+;; 		     "lisp/odt.el"
+;; 		     "etc"
+;; 		     "docs"
+;; 		     "contrib/odt/LibreOffice"))
 ;;   :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
 ;;   )
 (use-package ox-pandoc
