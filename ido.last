@@ -23,6 +23,7 @@
 
 ;; ----- ido-work-directory-list -----
 (
+ "/home/rauchway/.emacs.d/"
  "/Users/earauchway/.emacs.d/"
  "/Users/earauchway/OneDrive/writing_proj/2024-09-01_vico_revision/"
  "/Users/earauchway/OneDrive/writing_proj/theme/"
@@ -39,7 +40,6 @@
  "/Users/earauchway/.emacs.d/straight/repos/org-mode-ox-odt/etc/styles/"
  "/Users/earauchway/"
  "/home/rauchway/OneDrive/writing_proj/2024-09-01_vico_revision/"
- "/home/rauchway/.emacs.d/"
  "/Users/earauchway/OneDrive/org/"
  "/Users/earauchway/OneDrive/org/roam/"
  "/Users/earauchway/.emacs-bak.d/"
@@ -47,10 +47,10 @@
 
 ;; ----- ido-work-file-list -----
 (
+ ".gitignore"
  "init.el"
  "Government Rum.docx"
  "vico_revision.org"
- ".gitignore"
  "org-custom.css"
  "various_header3.org"
  "min_header.org"
@@ -61,6 +61,8 @@
 
 ;; ----- ido-dir-file-cache -----
 (
+ ("/home/rauchway/.emacs.d/" (26298 38581 447983 528000) "ido.last~" "auto-save-list/" ".gitignore" "./" ".git/" "straight/" "history" "../" "recentf" ".DS_Store" "undo-fu-session/" "eln-cache/" "init.el" "ido.last" "tramp" "README.md")
+
  ("/Users/earauchway/.emacs.d/" (26298 35800 417561 540000) ".git/" "recentf" "history" ".gitignore" "org-roam.db" "README.md" "init.el" "auto-save-list/" "eln-cache/" "straight/" "tramp" "undo-fu-session/" "ido.last~" ".DS_Store" "ido.last" "../" "./")
 
  ("/Users/earauchway/OneDrive/writing_proj/2024-09-01_vico_revision/" (26298 35020 0 0) "USVI-Rauchway Olmsted.pdf" "#vico_revision.qmd#" "NARA docs/" "vico_revision.docx" "Government Rum.pdf" "2024-08-19_nara_cp.xlsx" "2024-08-19_nara_cp.org" "vandynotes.org" "How the New Deal Was Run author comments.Olmsted & Rauchway.docx" ".#vico_revision.org" "vandycomments.org" "Government Rum.docx" "vandycomments3.org" "vandycomments2.org" "vico_revision.odt" "stx_notes.org" "Rauchway Olmstead Advance Pull Template.xlsx" "2024-08-19_nara_cp.csv" "vico_revision.org" "vanderbilt.org" ".DS_Store" "Advance Pull Template.xlsx" "vico_revision.org~" "../" "./")
@@ -128,8 +130,6 @@
  ("/Users/earauchway/OneDrive/org/" (26279 53407 750499 500000) "diary~" "diary" ".orgids" "diary-ls-240036" "roam/" "test.el" ".DS_Store" "../" "./")
 
  ("/Users/earauchway/" (26294 40694 710607 814000) "OneDrive - University of California, Davis/" ".501970.padl" ".zsh_sessions/" ".viminfo" ".bash_history" ".Box_StreemToSync" ".gitconfig" ".cache/" "tmp/" ".python_history" "Downloads/" ".Xauthority" ".apdisk" ".dvdcss/" ".bash_profile" ".TemporaryItems/" ".rstudio-desktop/" "Documents/" ".npm/" "Brewfile" ".zoomus/" ".Trash/" ".Box_EngineServer" ".Rapp.history" "Dropbox/" "Zoom/" ".parallel/" "Applications/" "Movies/" ".ssh/" ".old_configs/" ".openvpn-connect.json" ".RData" ".gitignore" ".dropbox/" "Public/" ".bash_sessions/" "Sites/" ".cups/" ".emacs.d/" "Documents_offline/" ".grass7/" "emacs-bak.d/" "Zotero/" "Calibre Library/" ".mbsyncrc" ".doom.d/" ".lesshst" "Trash/" "emacs-wait.d/" "Library/" "Desktop/" "sis_proj/" ".zsh_history" ".bash_profile.macports-saved_2024-02-09_at_08:48:20" "R/" ".Box_SyncToStreem" "Pictures/" ".local/" "OneDrive/" ".adobe/" ".zshrc" ".bashrc" "test/" ".CFUserTextEncoding" ".bash_profile.swp" ".gnupg/" ".Box_UIServer" ".r/" ".DS_Store" ".vim/" "Music/" ".config/" "Brewfile~" ".Rhistory" "../" "./")
-
- ("/home/rauchway/.emacs.d/" (26294 20516 622836 412000) "ido.last~" "auto-save-list/" ".gitignore" "./" ".git/" "straight/" "../" "recentf" "undo-fu-session/" "eln-cache/" "init.el" "session.10872b55fcf8c3919d172322098034900600000025890090" "ido.last" "README.md")
 
  ("/home/" (26112 22148 936248 353000) "partimag/" "./" "dssadmin/" "../" "rauchway/")
 
