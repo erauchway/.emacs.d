@@ -72,10 +72,10 @@
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
 
-(use-package gruvbox-theme
-  :straight t
-  :config
-  (load-theme 'gruvbox-dark-soft t))
+;; (use-package gruvbox-theme
+;;   :straight t
+;;   :config
+;;   (load-theme 'gruvbox-dark-soft t))
 (use-package zenburn-theme
   :straight t
   :config
@@ -98,7 +98,14 @@
   :init
   (doom-modeline-mode 1)
   (setq doom-modeline-enable-word-count t
-	doom-mode-line-continuous-word-count-modes '(org-mode markdown-mode))
+	doom-modeline-continuous-word-count-modes '(org-mode markdown-mode)
+	doom-modeline-icon t
+	doom-modeline-major-mode-color-icon t
+	doom-modeline-time t
+	doom-modeline-time-icon t
+	doom-modeline-time-live-icon t
+	doom-modeline-time-analogue-clock t
+	)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -108,6 +115,7 @@
 (when (eq system-type 'darwin)
   (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 14"))
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (setq initial-frame-alist '((top . 0) (left . 0)))
   (set-face-attribute 'default t :font "IBM Plex Mono 14")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
@@ -169,7 +177,7 @@
 	  try-complete-lisp-symbol
 	  )
 	)
- (use-package vertico
+(use-package vertico
    :straight t
    :init (vertico-mode)
    :config
@@ -221,6 +229,13 @@
 (setq ido-enable-flex-matching t)
 (setq ido-everywhere t)
 (ido-mode 1)
+;; spelling
+(with-eval-after-load 'flyspell
+  (setq ispell-list-command "--list"
+	ispell-dictionary "en_US"))
+(use-package flyspell-correct-popup
+  :straight t
+  :after flyspell)  
 ;; snippets
 (use-package yasnippet
   :straight t
@@ -256,7 +271,8 @@
 (use-package org
   :straight t (:type built-in)
   :hook ((org-mode . +org-enable-auto-reformat-tables-h)
-	 (org-mdoe . org-indent-mode))
+	 (org-mode . org-indent-mode)
+	 (org-mode . flyspell-mode))
   :config
   (setq org-directory "~/OneDrive/org"
 	org-odt-preferred-output-format "docx"

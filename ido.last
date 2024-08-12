@@ -16,16 +16,17 @@
  ("/home/rauchway/OneDrive/writing_proj/" . "2024-09-01_vico_revision/")
  ("/home/rauchway/OneDrive/" . "writing_proj/")
  ("/home/rauchway/" . ".emacs.d/")
- ("/Users/earauchway/" . "OneDrive/")
- ("/Users/earauchway/OneDrive/writing_proj/" . "theme/")
+ ("/Users/earauchway/" . ".emacs.d/")
+ ("/Users/earauchway/OneDrive/writing_proj/" . "2024-09-01_vico_revision/")
  ("/Users/earauchway/OneDrive/" . "writing_proj/")
 )
 
 ;; ----- ido-work-directory-list -----
 (
+ "/Users/earauchway/.emacs.d/"
+ "/Users/earauchway/OneDrive/writing_proj/2024-09-01_vico_revision/"
  "/Users/earauchway/OneDrive/writing_proj/theme/"
  "/Users/earauchway/OneDrive/teaching/h174b/theme/"
- "/Users/earauchway/.emacs.d/"
  "/Users/earauchway/OneDrive/teaching/h174b/"
  "/Users/earauchway/OneDrive/common/"
  "/Users/earauchway/OneDrive/writing_proj/"
@@ -36,7 +37,6 @@
  "/Users/earauchway/.emacs.d/straight/repos/org/etc/styles/"
  "/Users/earauchway/.emacs.d/straight/build/org-mode-ox-odt/etc/styles/"
  "/Users/earauchway/.emacs.d/straight/repos/org-mode-ox-odt/etc/styles/"
- "/Users/earauchway/OneDrive/writing_proj/2024-09-01_vico_revision/"
  "/Users/earauchway/"
  "/home/rauchway/OneDrive/writing_proj/2024-09-01_vico_revision/"
  "/home/rauchway/.emacs.d/"
@@ -47,20 +47,24 @@
 
 ;; ----- ido-work-file-list -----
 (
+ "init.el"
+ "Government Rum.docx"
+ "vico_revision.org"
+ ".gitignore"
  "org-custom.css"
  "various_header3.org"
  "min_header.org"
  "test_theme.org"
  "reveal_theme.org"
- "init.el"
  "test_lec.org"
- "various_header2.org"
- "custom.scss"
- "_quarto.yml"
 )
 
 ;; ----- ido-dir-file-cache -----
 (
+ ("/Users/earauchway/.emacs.d/" (26298 35800 417561 540000) ".git/" "recentf" "history" ".gitignore" "org-roam.db" "README.md" "init.el" "auto-save-list/" "eln-cache/" "straight/" "tramp" "undo-fu-session/" "ido.last~" ".DS_Store" "ido.last" "../" "./")
+
+ ("/Users/earauchway/OneDrive/writing_proj/2024-09-01_vico_revision/" (26298 35020 0 0) "USVI-Rauchway Olmsted.pdf" "#vico_revision.qmd#" "NARA docs/" "vico_revision.docx" "Government Rum.pdf" "2024-08-19_nara_cp.xlsx" "2024-08-19_nara_cp.org" "vandynotes.org" "How the New Deal Was Run author comments.Olmsted & Rauchway.docx" ".#vico_revision.org" "vandycomments.org" "Government Rum.docx" "vandycomments3.org" "vandycomments2.org" "vico_revision.odt" "stx_notes.org" "Rauchway Olmstead Advance Pull Template.xlsx" "2024-08-19_nara_cp.csv" "vico_revision.org" "vanderbilt.org" ".DS_Store" "Advance Pull Template.xlsx" "vico_revision.org~" "../" "./")
+
  ("/Users/earauchway/OneDrive/writing_proj/2024-08-12_test_theme/" (26298 28462 264660 305000) "test_theme.html" "test_theme.org" "test_theme.org~" "../" "./")
 
  ("/Users/earauchway/OneDrive/writing_proj/theme/" (26298 28071 0 0) "various_header3.org" "org-custom.css" "fonts.css" "min_header.org" "custom.scss" "clear.el" "et-book-roman-line-figures.ttf" "styles.css" "lydian__.ttf" "various_header3.org~" "min_header.org~" "../" "./")
@@ -68,8 +72,6 @@
  ("/Users/earauchway/OneDrive/teaching/h174b/" (26298 27434 228761 234000) "174b_midterm2.org" "timer_test_files/" "174b_18.html" "174b_22.html" "174b_midterm1.org" "174b_02.html" "174b_14.html" "174b_07.md" "timer_test.org" "174b_20a.org" "174b_midterm2.pdf" "174b_15.html" "zoom_test.html" "174b_test.html" "174b_23.html" "test_list.html" "174b_midterm1.pdf" "test_list.org" "174b_19.html" "174b_04.html" "174b_12.html" "174b_26.org" "174b_08.pdf" "174b_21.pdf" "test_lec.org" "174b_09.pdf" "174b_midterm1a.pdf" "174b_08.html" "174b_19.org" "174b_25.org" "174b_23.pdf" "174b_22.pdf" "174b_final_bb.org" "174b_test_files/" "174b_24.org" "174b_18.org" "174b_24.html" "174b_25.html" "theme/" "174b_20.org" "174b_08.org" "174b_26.pdf" "chalkboard_test.html" "174b_midterm1a.org" "174b_09.org" "174b_21.org" "174b_09.html" "174b_23.org" "174b_25.pdf" "174b_19.pdf" "174b_18.pdf" "174b_24.pdf" "timer_test.qmd" "174b_final_bb.pdf" "174b_13.html" "174b_22.org" "174b_05.html" "174b_07.org" "174b_13.org" "174b_01.pdf" "174b_15.pdf" "174b_14.pdf" "174b_12.org" "174b_10.html" "174b_06.org" "174b_06.html" "4067.png" "174b_26.html" "teaching.org" "174b_10.org" "174b_04.org" "174b_test.qmd" "174b_terms.html" "174b_terms.pdf" "174b_16.pdf" "174b_02.pdf" "174b_17.pdf" "174b_self-test.html" "test_lec.html" "174b_05.org" "174b_11.org" "174b_20a.html" "174b_15.org" "174b_01.org" "174b_13.pdf" "174b_07.pdf" "174b_06.pdf" "174b_12.pdf" "174b_14.org" "zoom_test.org" "174b_07.html" "174b_02.org" "174b_11.html" "174b_16.org" "174b_terms.org" "174b_04.pdf" "174b_10.pdf" "174b_11.pdf" "174b_05.pdf" "174b_17.org" "174b_20.html" "174b_final_a.pdf" "reveal.js-plugins/" "chalkboard_test.org" "timer_test.html" "174b_final_d.org" "174b_final_bank.org" "174b_final_c.pdf" ".DS_Store" "174b_16.html" "174b_01.html" "174b_17.html" "174b_final_a.org" "timer.js" "174b_test.org" "174b_final_bank.pdf" "174b_final_d.pdf" "test_lec.org~" "174b_final_c.org" "174b_21.html" "../" "./")
 
  ("/Users/earauchway/OneDrive/teaching/h174b/theme/" (26298 27464 353363 303000) "sample_image.png" "org-custom.css" "test_theme.org" "reveal.js/" "org-custom_backup.css" "reveal_theme_test.org" ".#reveal_theme.org" "test_theme.org~" "wider_image.png" "reveal_theme_test.org~" "et-book-roman-line-figures.ttf" "org-columns.css" "reveal_theme.org" "#reveal_theme.org#" "lydian__.ttf" "dunkirk.mov" "org-custom_backup2.css" "timer.js" "reveal_theme.html" "EBGaramond-Regular.ttf" "../" "./")
-
- ("/Users/earauchway/.emacs.d/" (26298 26970 465669 234000) "#init.el#" ".git/" "recentf" "history" ".gitignore" ".#init.el" "org-roam.db" "README.md" "init.el" "auto-save-list/" "eln-cache/" "straight/" "tramp" "undo-fu-session/" "ido.last~" ".DS_Store" "ido.last" "../" "./")
 
  ("/Users/earauchway/OneDrive/writing_proj/" (26298 26801 766702 60000) ".quarto/" ".Rproj.user/" "2024-05-10_chuck_eval/" "2024-06-18_leighninger_ku_referee/" "2024-04-28_davis_merit/" "2023-10-10_mai_tai_guide/" "2024-05-14_freeman_eval/" "mai_tai_guide_pub/" "2024-05-21_honors_form/" "2024-02-12_wine_proposal/" "theme/" "2024-04-28_blower/" "2024-08-12_test_theme/" "2024-06-17_jph_referee/" "2024-04-28_tls_handover/" "2024-09-01_vico_revision/" "2024-03-05_lat_request/" "2024-05-20_VI_IPUMS_app/" "2024-04-28_kso_sah/" "2024-04-19_Vandy_USVI/" "2024-04-28_sabbatical_statement/" "2024-07-03_connelly_rah/" "2024-06-21_acgh_17B/" "move_it.sh" "2024-04-28_ama_myth/" "2024-07-15_thomas_dissertation/" "writing_proj.Rproj" "2024-09-08_frontiers/" "2024-04-28_rethinking_review/" ".DS_Store" "2024-08-01_wine_pcb_hi/" "2024-05-05_jwr_protests/" "2024-04-28_mellon_statement/" "2024-04-28_mellon_application/" "2024-07-16_govt_house_murals/" "2024-04-28_his_enroll/" "_quarto.yml" ".Rhistory" "2024-05-27_warren_eval/" "_outputs/" "../" "./")
 
@@ -120,8 +122,6 @@
  ("/Users/earauchway/emacs-bak.d/" (26143 2202 535818 671000) "modules/" ".git/" "profiles/" "templates/" "early-init.el" ".github/" ".gitignore" "README.md" "docs/" "eln-cache/" "shell.nix" ".local/" ".doomrc" "bin/" "LICENSE" "lisp/" ".dir-locals.el" "../" "./")
 
  ("/Users/earauchway/tmp/emacs/doc/misc/" (26222 8690 105019 159000) "info.texi" "sasl.texi" "semantic.texi" "emacs-gnutls.texi" "forms.texi" "Makefile.in" "gnus-faq.texi" "ido.texi" "calc.texi" "pcl-cvs.texi" "emacs-mime.texi" "url.texi" "eieio.texi" "vip.texi" "texinfo.tex" "cl.texi" "htmlfontify.texi" "eudc.texi" "eshell.texi" "message.texi" "tramp.texi" "vhdl-mode.texi" "octave-mode.texi" "ChangeLog.1" "doclicense.texi" "pgg.texi" "dired-x.texi" "sc.texi" "use-package.texi" "ede.texi" "woman.texi" "mh-e.texi" "ert.texi" "remember.texi" "vtable.texi" "gpl.texi" "epa.texi" "efaq-w32.texi" "trampver.texi" "bovine.texi" "auth.texi" "wisent.texi" "sem-user.texi" "nxml-mode.texi" "cc-mode.texi" "efaq.texi" "reftex.texi" "viper.texi" "ebrowse.texi" "todo-mode.texi" "autotype.texi" "modus-themes.org" "flymake.texi" "erc.texi" "dbus.texi" "eglot.texi" "org-setup.org" "widget.texi" "smtpmail.texi" "idlwave.texi" "speedbar.texi" "mairix-el.texi" "org.org" "edt.texi" "sieve.texi" "ses.texi" "srecode.texi" "rcirc.texi" "newsticker.texi" "transient.texi" "gnus.texi" "ediff.texi" "eww.texi" "../" "./")
-
- ("/Users/earauchway/OneDrive/writing_proj/2024-09-01_vico_revision/" (26297 9825 886226 904000) "USVI-Rauchway Olmsted.pdf" "#vico_revision.qmd#" "NARA docs/" "vico_revision.docx" "Government Rum.pdf" "2024-08-19_nara_cp.xlsx" "2024-08-19_nara_cp.org" "vandynotes.org" "How the New Deal Was Run author comments.Olmsted & Rauchway.docx" "vandycomments.org" "Government Rum.docx" "vandycomments3.org" "vandycomments2.org" "vico_revision.odt" "stx_notes.org" "Rauchway Olmstead Advance Pull Template.xlsx" "2024-08-19_nara_cp.csv" "vico_revision.org" "vanderbilt.org" ".DS_Store" "Advance Pull Template.xlsx" "vico_revision.org~" "../" "./")
 
  ("/Users/" (26191 50802 51 264000) "earauchway/" "loginwindow/" "finances/" "ksolmsted/" "Shared/" "adminonly/" ".localized" "../" "./")
 
