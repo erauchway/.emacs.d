@@ -367,6 +367,9 @@
   (setq org-agenda-skip-scheduled-if-done t
                     org-agenda-timegrid-use-ampm t
                     org-agenda-skip-deadline-if-done t
+		    org-agenda-skip-scheduled-if-deadline-is-shown t
+		    org-agenda-skip-deadline-prewarning-if-scheduled t
+		    org-agenda-skip-timestamp-if-done t
                     org-agenda-include-diary t
                     org-agenda-include-deadlines t
                     org-deadline-warning-days 45
@@ -395,9 +398,10 @@
                                      '(
                                        (:name ""
                                         :time-grid t
-                                        ;; :log t
+                                        :log t
                                         :date today
                                         :order 1
+					;; :discard (:not (:todo "TODO")))
                                         :discard (:anything))
                                        ))))
                         (alltodo "" ((org-agenda-overriding-header "")
@@ -424,7 +428,8 @@
                                         )
                                         ;;(:auto-group t)
                                         ;;(:auto-priority t)
-                                        (:discard (:anything))
+					;; (:discard (:anything))
+					(:discard (:not (:todo "TODO")))
                                         ))))))))
               :config
               (org-super-agenda-mode)
@@ -494,10 +499,14 @@
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 )
 ;; for reveal presentations
-(use-package ox-reveal
+;; (use-package ox-reveal
+;;   :straight t
+
+;;   )
+(use-package org-re-reveal
   :straight t
   :config
-  (setq org-reveal-root "~/OneDrive/teaching/h174b/theme/reveal.js")
+  (setq org-re-reveal-root "~/OneDrive/common/reveal.js")
   )
 ;; citations
 (use-package citar
