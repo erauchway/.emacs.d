@@ -97,14 +97,13 @@
   :straight t
   :init
   (doom-modeline-mode 1)
+  (display-time-mode 1)
+  (display-battery-mode 1)
   (setq doom-modeline-enable-word-count t
 	doom-modeline-continuous-word-count-modes '(org-mode markdown-mode)
 	doom-modeline-icon t
 	doom-modeline-major-mode-color-icon t
-	doom-modeline-time t
-	doom-modeline-time-icon t
-	doom-modeline-time-live-icon t
-	doom-modeline-time-analogue-clock t
+	doom-modeline-minor-modes t
 	)
   )
 
@@ -333,7 +332,7 @@
 (with-eval-after-load "org"
   (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
   )
-;; getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
+;; on getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
 (use-package emacsql
   :straight t
   :defer nil
