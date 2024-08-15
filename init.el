@@ -118,8 +118,9 @@
 
 (when (eq system-type 'darwin)
   (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 14"))
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  ;;(add-to-list 'default-frame-alist '(fullscreen . maximized))
   (setq initial-frame-alist '((top . 0) (left . 0)))
+  (toggle-frame-fullscreen)
   (set-face-attribute 'default t :font "IBM Plex Mono 14")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
