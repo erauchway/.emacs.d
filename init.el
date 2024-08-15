@@ -93,12 +93,17 @@
 (global-display-line-numbers-mode t)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
+(require 'battery)
 (use-package doom-modeline
   :straight t
   :init
   (doom-modeline-mode 1)
   (display-time-mode 1)
-  (display-battery-mode 1)
+  (when (and battery-status-function
+	     (not (string-match-p "N/A"
+				  (battery-format "%B"
+						  (funcall battery-status-function)))))
+    (display-battery-mode 1))
   (setq doom-modeline-enable-word-count t
 	doom-modeline-continuous-word-count-modes '(org-mode markdown-mode)
 	doom-modeline-icon t
@@ -510,10 +515,20 @@
 ;; citations
 (use-package citar
   :straight t
+  :init (setq citar-templates
+      '((main . "${author editor:30%sn}     ${date year issued:4}     ${title:48}")
+        (suffix . "          ${=key= id:15}    ${=type=:12}    ${tags keywords:*}")
+        (preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.\n")
+        (note . "Notes on ${author editor:%etal}, ${title}")))
+		)
+(use-package citar-embark
+  :after citar embark
+  :no-require
+  :config (citar-embark-mode)
   )
+(setq citar-bibliography '("~/OneDrive/common/big_bib.json"))
 (setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.json"))
 (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
-(setq citar-bibliography '("~/OneDrive/common/big_bib.json"))
 (use-package markdown-mode
   :straight t
   :mode ("README\\.md\\'" . gfm-mode)
