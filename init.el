@@ -231,8 +231,10 @@
   :straight t
   )
 ;; ido
-(setq ido-enable-flex-matching t)
-(setq ido-everywhere t)
+(setq ido-enable-flex-matching t
+      ido-everywhere t
+      ido-file-extensions-order '(".org" ".qmd" ".docx")
+      )
 (ido-mode 1)
 ;; spelling
 (with-eval-after-load 'flyspell
@@ -619,7 +621,7 @@ Meant for `org-mode-hook'."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8" "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a" "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3" default)))
+   '("9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0" "871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8" "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a" "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3" default)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
