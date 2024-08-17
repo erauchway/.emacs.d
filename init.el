@@ -518,11 +518,13 @@
 ;; citations
 (use-package citar
   :straight t
-  :init (setq citar-templates
-      '((main . "${author editor:30%sn}     ${date year issued:4}     ${title:48}")
-        (suffix . "          ${=key= id:15}    ${=type=:12}    ${tags keywords:*}")
+  :config
+  (setq citar-templates
+      '((main . "${author editor:30%sn}     ${date year issued:4}     ${title:30}")
+        (suffix . "          ${=key= id:30}    ${=type=:12}    ${tags keywords:*}")
         (preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.\n")
-        (note . "Notes on ${author editor:%etal}, ${title}")))
+        (note . "Notes on ${author editor:%etal}, ${title}"))
+      )
 		)
 (use-package citar-embark
   :after citar embark
