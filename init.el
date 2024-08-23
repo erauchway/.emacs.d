@@ -93,18 +93,22 @@
 (global-display-line-numbers-mode t)
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
+(require 'battery)
 (use-package doom-modeline
   :straight t
   :init
   (doom-modeline-mode 1)
+  (display-time-mode 1)
+  (when (and battery-status-function
+	     (not (string-match-p "N/A"
+				  (battery-format "%B"
+						  (funcall battery-status-function)))))
+    (display-battery-mode 1))
   (setq doom-modeline-enable-word-count t
 	doom-modeline-continuous-word-count-modes '(org-mode markdown-mode)
 	doom-modeline-icon t
 	doom-modeline-major-mode-color-icon t
-	doom-modeline-time t
-	doom-modeline-time-icon t
-	doom-modeline-time-live-icon t
-	doom-modeline-time-analogue-clock t
+	doom-modeline-minor-modes t
 	)
   )
 
@@ -114,8 +118,9 @@
 
 (when (eq system-type 'darwin)
   (add-to-list 'default-frame-alist '(font . "IBM Plex Mono 14"))
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  ;;(add-to-list 'default-frame-alist '(fullscreen . maximized))
   (setq initial-frame-alist '((top . 0) (left . 0)))
+  (toggle-frame-fullscreen)
   (set-face-attribute 'default t :font "IBM Plex Mono 14")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
@@ -227,8 +232,10 @@
   :straight t
   )
 ;; ido
-(setq ido-enable-flex-matching t)
-(setq ido-everywhere t)
+(setq ido-enable-flex-matching t
+      ido-everywhere t
+      ido-file-extensions-order '(".org" ".qmd" ".docx")
+      )
 (ido-mode 1)
 ;; spelling
 (with-eval-after-load 'flyspell
@@ -334,7 +341,7 @@
 (with-eval-after-load "org"
   (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
   )
-;; getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
+;; on getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
 (use-package emacsql
   :straight t
   :defer nil
@@ -368,6 +375,9 @@
   (setq org-agenda-skip-scheduled-if-done t
                     org-agenda-timegrid-use-ampm t
                     org-agenda-skip-deadline-if-done t
+		    org-agenda-skip-scheduled-if-deadline-is-shown t
+		    org-agenda-skip-deadline-prewarning-if-scheduled t
+		    org-agenda-skip-timestamp-if-done t
                     org-agenda-include-diary t
                     org-agenda-include-deadlines t
                     org-deadline-warning-days 45
@@ -396,9 +406,10 @@
                                      '(
                                        (:name ""
                                         :time-grid t
-                                        ;; :log t
+                                        :log t
                                         :date today
                                         :order 1
+					;; :discard (:not (:todo "TODO")))
                                         :discard (:anything))
                                        ))))
                         (alltodo "" ((org-agenda-overriding-header "")
@@ -425,7 +436,8 @@
                                         )
                                         ;;(:auto-group t)
                                         ;;(:auto-priority t)
-                                        (:discard (:anything))
+					;; (:discard (:anything))
+					(:discard (:not (:todo "TODO")))
                                         ))))))))
               :config
               (org-super-agenda-mode)
@@ -495,18 +507,34 @@
                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 )
 ;; for reveal presentations
-(use-package ox-reveal
+;; (use-package ox-reveal
+;;   :straight t
+
+;;   )
+(use-package org-re-reveal
   :straight t
   :config
-  (setq org-reveal-root "~/OneDrive/teaching/h174b/theme/reveal.js")
+  (setq org-re-reveal-root "~/OneDrive/common/reveal.js")
   )
 ;; citations
 (use-package citar
   :straight t
+  :config
+  (setq citar-templates
+      '((main . "${author editor:30%sn}     ${date year issued:4}     ${title:30}")
+        (suffix . "          ${=key= id:30}    ${=type=:12}    ${tags keywords:*}")
+        (preview . "${author editor:%etal} (${year issued date}) ${title}, ${journal journaltitle publisher container-title collection-title}.\n")
+        (note . "Notes on ${author editor:%etal}, ${title}"))
+      )
+		)
+(use-package citar-embark
+  :after citar embark
+  :no-require
+  :config (citar-embark-mode)
   )
+(setq citar-bibliography '("~/OneDrive/common/big_bib.json"))
 (setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.json"))
 (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
-(setq citar-bibliography '("~/OneDrive/common/big_bib.json"))
 (use-package markdown-mode
   :straight t
   :mode ("README\\.md\\'" . gfm-mode)
@@ -596,7 +624,7 @@ Meant for `org-mode-hook'."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8" "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a" "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3" default)))
+   '("9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0" "871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8" "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a" "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3" default)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
