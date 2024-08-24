@@ -140,8 +140,8 @@
     (interactive)
      (setq initial-frame-alist
      	'((top . 0) (left . 0) (height . 65) (width . 80)))
-     (set-face-attribute 'default nil :font "IBM Plex Mono Medium 14")
-     ;;(set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
+     ;;(set-face-attribute 'default nil :font "IBM Plex Mono Medium 14")
+     (set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
      (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
