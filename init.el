@@ -67,7 +67,7 @@
 (keymap-global-set "C-c n r d t" 'org-roam-dailies-goto-today)
 (keymap-global-set "C-c n r d y" 'org-roam-dailies-goto-yesterday)
 (keymap-global-set "C-c o t" 'vterm-other-window)
-
+(keymap-global-set "C-x g" 'magit-status)
 ;;;;;;;;;;;;;;;;
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
@@ -108,7 +108,9 @@
 	doom-modeline-continuous-word-count-modes '(org-mode markdown-mode)
 	doom-modeline-icon t
 	doom-modeline-major-mode-color-icon t
-	doom-modeline-minor-modes t
+	doom-modeline-minor-modes nil
+	doom-modeline-check-icon t
+	doom-modeline-buffer-state-icon t
 	)
   )
 
@@ -117,17 +119,17 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (when (eq system-type 'darwin)
-  (add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 14"))
+  ;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 14"))
   ;;(add-to-list 'default-frame-alist '(fullscreen . maximized))
   (setq initial-frame-alist '((top . 0) (left . 0)))
   (toggle-frame-fullscreen)
-  (set-face-attribute 'default t :font "DejaVu Sans Mono 16")
+  ;;(set-face-attribute 'default t :font "DejaVu Sans Mono 16")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
 ;;    (setq initial-frame-alist
 ;;	'((top . 0) (left . 0) (height . 65) (width . 80)))
-    (set-face-attribute 'default nil :font "DejaVu Sans Mono 16")
+    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
     (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
@@ -266,6 +268,10 @@
   (setq default pdf-view-display-size 'fit-width)
   :custom
   (pdf-annot-activate-created-annotations t "automatically annotate highlights")
+  )
+;; magit
+(use-package magit
+  :straight t
   )
 
 ;;;;;;;;;
