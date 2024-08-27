@@ -259,6 +259,20 @@
         deft-recursive t
 	deft-use-filename-as-title t)
   )
+;; a list of possible deft directories; https://www.reddit.com/r/emacs/comments/h0h4ix/how_to_configure_multile_directories_with_deft/
+(defvar my/deft-dir-list '()
+  "A list of deft directories to pick")
+
+(setq my/deft-dir-list '("~/OneDrive/org/"
+                         "~/OneDrive/writing_proj/"
+                         ))
+
+(defun my/pick-deft-dir ()
+  "Select directories from a list"
+  (interactive)
+  (setq deft-directory 
+        (ido-completing-read "Select directory: " my/deft-dir-list))
+  (deft-refresh))
 ;; pdf utilites
 (use-package pdf-tools
   :straight t
