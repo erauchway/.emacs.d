@@ -107,6 +107,7 @@
   (setq doom-modeline-enable-word-count t
 	doom-modeline-continuous-word-count-modes '(org-mode markdown-mode)
 	doom-modeline-icon t
+	doom-modeline-buffer-encoding nil
 	doom-modeline-major-mode-color-icon t
 	doom-modeline-minor-modes nil
 	doom-modeline-check-icon t
@@ -121,9 +122,8 @@
 (when (eq system-type 'darwin)
   ;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 14"))
   ;;(add-to-list 'default-frame-alist '(fullscreen . maximized))
-  (setq initial-frame-alist '((top . 0) (left . 0)))
-  (toggle-frame-fullscreen)
-  ;;(set-face-attribute 'default t :font "DejaVu Sans Mono 16")
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
+    ;;(set-face-attribute 'default t :font "DejaVu Sans Mono 16")
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
@@ -357,6 +357,7 @@
 	     :host github
 	     :repo "emacsorphanage/ox-pandoc"
 	     :files ("ox-pandoc.el"))
+  :config (add-to-list 'org-pandoc-valid-options 'from)
   )  
 (with-eval-after-load "org"
   (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
@@ -403,12 +404,11 @@
                     org-deadline-warning-days 45
                     org-agenda-todo-ignore-deadlines (quote far)
                     org-agenda-todo-ignore-scheduled (quote far)
-                    org-agenda-block-separator nil
                     org-agenda-compact-blocks t
-                    org-agenda-start-day nil
+		    org-agenda-start-day nil
                     org-agenda-start-with-log-mode t
-                    org-agenda-span 7
-                    org-agenda-view-columns-initially t
+                    org-agenda-span 10
+                    ;; org-agenda-view-columns-initially t
                     org-columns-default-format "%TODO %25Item %14Deadline %Clocksum_t"
                     org-agenda-start-on-weekday nil
                     org-agenda-prefix-format '(
