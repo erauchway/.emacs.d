@@ -23,6 +23,8 @@
 ;; Use-package
 (straight-use-package 'use-package)
 (require 'use-package)
+
+
 ;; recent files 
 ;; (use-package 'recentf
 ;;   :init
@@ -30,8 +32,10 @@
 ;;   (setq recentf-max-menu-items 50)
 ;;   (setq recentf-max-saved-items 50)
 ;;   (run-at-time (current-time) 300 'recentf-save-list)
-;;   (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/OneDrive/org/roam/daily/*.org"))))
+;;   (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/Dropbox/org/roam/daily/*.org"))))
 ;;   )
+
+
 ;; Undo
 (use-package undo-fu
   :straight t)
@@ -53,6 +57,13 @@
 (setq insert-directory-program "gls") 
 
 
+;; attempts at speeding startup
+
+(setq gc-cons-threshold most-positive-fixnum)
+(add-hook 'emacs-startup-hook
+	  (lambda ()
+	    (setq gc-cons-threshold (expt 2 23))))
+
 ;;;;;;;;;;
 ;; keys ;;
 ;;;;;;;;;;
@@ -68,6 +79,7 @@
 (keymap-global-set "C-c n r d y" 'org-roam-dailies-goto-yesterday)
 (keymap-global-set "C-c o t" 'vterm-other-window)
 (keymap-global-set "C-x g" 'magit-status)
+
 ;;;;;;;;;;;;;;;;
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
@@ -85,6 +97,7 @@
 (setq inhibit-startup-message t) 
 (setq initial-scratch-message nil)
 (setq visible-bell t)
+(setq ring-bell-function 'ignore)
 (setq warning-minimum-level :emergency)
 (setq confirm-kill-processes nil)
 (tool-bar-mode -1)
@@ -130,9 +143,12 @@
 ;;    (setq initial-frame-alist
 ;;	'((top . 0) (left . 0) (height . 65) (width . 80)))
     (set-face-attribute 'default nil :font "IBM Plex Mono 14")
-    (org-agenda nil "z")
+    ;; (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+  (setq mac-command-modifier 'meta)
+  (setq mac-option-modifier nil)
+  
   )
 (when (eq system-type 'gnu/linux)
   ;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 12"))
@@ -144,10 +160,12 @@
      	'((top . 0) (left . 0) (height . 65) (width . 80)))
      ;;(set-face-attribute 'default nil :font "IBM Plex Mono Medium 14")
      (set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
-     (org-agenda nil "z")
+     ;; (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   )
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; various necessities ;;
@@ -155,7 +173,7 @@
 
 ;; diary
 (setq calendar-date-style 'iso)
-(setq diary-file "~/OneDrive/org/diary")
+(setq diary-file "~/Dropbox/org/diary")
 (add-hook 'diary-list-entries-hook 'diary-sort-entries t)
 ;;completion
 (use-package company
@@ -241,6 +259,7 @@
 (ido-mode 1)
 ;; spelling
 (with-eval-after-load 'flyspell
+  (setq ispell-program-name "/opt/homebrew/bin/aspell")
   (setq ispell-list-command "--list"
 	ispell-dictionary "en_US"))
 (use-package flyspell-correct-popup
@@ -255,7 +274,7 @@
   :straight t
   :config
   (setq deft-extensions '("org" "md" "qmd" "rmd"))
-  (setq deft-directory "~/OneDrive/org"
+  (setq deft-directory "~/Dropbox/org"
         deft-recursive t
 	deft-use-filename-as-title t)
   )
@@ -263,8 +282,8 @@
 (defvar my/deft-dir-list '()
   "A list of deft directories to pick")
 
-(setq my/deft-dir-list '("~/OneDrive/org/"
-                         "~/OneDrive/writing_proj/"
+(setq my/deft-dir-list '("~/Dropbox/org/"
+                         "~/Dropbox/writing_proj/"
                          ))
 
 (defun my/pick-deft-dir ()
@@ -278,11 +297,14 @@
   :straight t
   ;; :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
   :config
+  (setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/zlib/1.3.1/lib/pkgconfig:/opt/homebrew/Cellar/poppler/24.12.0/lib/pkgconfig")
   (pdf-tools-install)
   (setq default pdf-view-display-size 'fit-width)
+  (custom-set-variables '(pdf-tools-handle-upgrades t))
   :custom
   (pdf-annot-activate-created-annotations t "automatically annotate highlights")
   )
+
 ;; magit
 (use-package magit
   :straight t
@@ -293,22 +315,22 @@
 ;;;;;;;;;
 
 ;; https://emacs.stackexchange.com/questions/64319/refile-to-non-agenda-files
-(defun org-candidate-files () (directory-files-recursively "~/OneDrive" "^[[:alnum::]].*\\.org\\'"))
+(defun org-candidate-files () (directory-files-recursively "~/Dropbox" "^[[:alnum::]].*\\.org\\'"))
 
 ;; org and others
 (use-package org
   :straight t (:type built-in)
-  :hook ((org-mode . +org-enable-auto-reformat-tables-h)
+  :hook (;;(org-mode . +org-enable-auto-reformat-tables-h)
 	 (org-mode . org-indent-mode)
 	 (org-mode . flyspell-mode))
   :config
-  (setq org-directory "~/OneDrive/org"
+  (setq org-directory "~/Dropbox/org"
 	org-odt-preferred-output-format "docx"
- 	org-odt-styles-file "~/OneDrive/common/reference2.odt"
+ 	org-odt-styles-file "~/Dropbox/common/reference2.odt"
 	org-odt-use-date-fields t
-	;; org-odt-content-template-file "~/OneDrive/common/odt_content_test.xml"
-	org-agenda-files (quote("~/OneDrive/org/roam/daily"
-				"~/OneDrive/org/roam"))
+	;; org-odt-content-template-file "~/Dropbox/common/odt_content_test.xml"
+	org-agenda-files (quote("~/Dropbox/org/roam/daily"
+				"~/Dropbox/org/roam"))
 	org-adapt-indentation t
 	org-hide-leading-stars t
 	org-refile-targets '((org-refile-candidates :maxlevel . 3))
@@ -339,47 +361,15 @@
 				      ("DONE" . "#3d5941")
 				      ("PROJ" . "#A16928"))))
   )
-(require 'ox-odt)
-;; (use-package ox-odt
-;; ;;  see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
-;;   :straight (org-mode-ox-odt
-;; 	     :host github
-;; 	     :repo "kjambunathan/org-mode-ox-odt"
-;; 	     :files ("lisp/ox-odt.el"
-;; 		     "lisp/odt.el"
-;; 		     "etc"
-;; 		     "docs"
-;; 		     "contrib/odt/LibreOffice"))
-;;   :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
-;;   )
-(use-package ox-pandoc
-  :straight (ox-pandoc
-	     :host github
-	     :repo "emacsorphanage/ox-pandoc"
-	     :files ("ox-pandoc.el"))
-  :config (add-to-list 'org-pandoc-valid-options 'from)
-  )  
-(with-eval-after-load "org"
-  (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
-  )
-;; on getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
-(use-package emacsql
-  :straight t
-  :defer nil
-  )
-(use-package emacsql-sqlite
-  :after emacsql
-  :straight t
-  :defer nil
-  )
+
 (use-package org-roam
   :straight t
   :after org
   :hook (org-roam-mode . visual-line-mode)
   :config
-  (setq org-roam-directory "~/OneDrive/org/roam/"
-	org-roam-index-file "~/OneDrive/org/roam/index.org"
-	org-roam-dailies-directory "~/OneDrive/org/roam/daily/"
+  (setq org-roam-directory "~/Dropbox/org/roam/"
+	org-roam-index-file "~/Dropbox/org/roam/index.org"
+	org-roam-dailies-directory "~/Dropbox/org/roam/daily/"
 	org-roam-dailies-capture-templates '(("d" "default" entry
          "* %?"
          :target (file+head "%<%Y-%m-%d>-daily.org"
@@ -391,7 +381,7 @@
 (setq org-agenda-window-setup (quote current-window))
 (use-package org-super-agenda
   :straight t
-  :after org-agenda
+  :after org
   :init
   (setq org-agenda-skip-scheduled-if-done t
                     org-agenda-timegrid-use-ampm t
@@ -462,12 +452,15 @@
               :config
               (org-super-agenda-mode)
 	      )
+
+
+
 ;; org-noter
 (use-package org-noter
   :straight t
   :after pdf-tools
   :config
-  (setq org-noter-notes-search-path '("~/OneDrive/org/roam/")
+  (setq org-noter-notes-search-path '("~/Dropbox/org/roam/")
 	org-noter-hide-other nil
 	org-noter-separate-notes-from-heading t
 	org-noter-always-create-frame nil
@@ -534,7 +527,44 @@
 (use-package org-re-reveal
   :straight t
   :config
-  (setq org-re-reveal-root "~/OneDrive/common/reveal.js")
+  (setq org-re-reveal-root "~/Dropbox/common/reveal.js")
+  )
+
+
+(require 'ox-odt)
+;; (use-package ox-odt
+;; ;;  see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
+;;   :straight (org-mode-ox-odt
+;; 	     :host github
+;; 	     :repo "kjambunathan/org-mode-ox-odt"
+;; 	     :files ("lisp/ox-odt.el"
+;; 		     "lisp/odt.el"
+;; 		     "etc"
+;; 		     "docs"
+;; 		     "contrib/odt/LibreOffice"))
+;;   :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
+;;   )
+
+
+(use-package ox-pandoc
+  :straight (ox-pandoc
+	     :host github
+	     :repo "emacsorphanage/ox-pandoc"
+	     :files ("ox-pandoc.el"))
+  :config (add-to-list 'org-pandoc-valid-options 'from)
+  )  
+(with-eval-after-load "org"
+  (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
+  )
+;; on getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
+(use-package emacsql
+  :straight t
+  :defer nil
+  )
+(use-package emacsql-sqlite
+  :after emacsql
+  :straight t
+  :defer nil
   )
 ;; citations
 (use-package citar
@@ -552,8 +582,8 @@
   :no-require
   :config (citar-embark-mode)
   )
-(setq citar-bibliography '("~/OneDrive/common/big_bib.json"))
-(setq org-cite-global-bibliography '("~/OneDrive/common/big_bib.json"))
+(setq citar-bibliography '("~/Dropbox/common/big_bib.json"))
+(setq org-cite-global-bibliography '("~/Dropbox/common/big_bib.json"))
 (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
 (use-package markdown-mode
   :straight t
@@ -638,6 +668,10 @@ Meant for `org-mode-hook'."
   (when (eq major-mode 'org-mode)
     (+org-realign-table-maybe-h))
   )
+
+
+
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
