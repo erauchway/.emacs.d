@@ -128,42 +128,6 @@
 	)
   )
 
-;;;;;;;;;;;;;;;;;;;;;;;
-;; startup by system ;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-(when (eq system-type 'darwin)
-  ;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 14"))
-  ;;(add-to-list 'default-frame-alist '(fullscreen . maximized))
-  (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
-    ;;(set-face-attribute 'default t :font "DejaVu Sans Mono 16")
-  (defun my-setup-initial-window-setup()
-    "Do initial window setup"
-    (interactive)
-;;    (setq initial-frame-alist
-;;	'((top . 0) (left . 0) (height . 65) (width . 80)))
-    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
-    ;; (org-agenda nil "z")
-    )
-  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-  (setq mac-command-modifier 'meta)
-  (setq mac-option-modifier nil)
-  
-  )
-(when (eq system-type 'gnu/linux)
-  ;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 12"))
-  ;;(set-face-attribute 'default t :font "IBM Plex Mono 14")
-  (defun my-setup-initial-window-setup()
-    "Do initial window setup"
-    (interactive)
-     (setq initial-frame-alist
-     	'((top . 0) (left . 0) (height . 65) (width . 80)))
-     ;;(set-face-attribute 'default nil :font "IBM Plex Mono Medium 14")
-     (set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
-     ;; (org-agenda nil "z")
-    )
-  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-  )
 
 
 
@@ -561,11 +525,11 @@
   :straight t
   :defer nil
   )
-(use-package emacsql-sqlite
-  :after emacsql
-  :straight t
-  :defer nil
-  )
+;; (use-package emacsql-sqlite
+;;   :after emacsql
+;;  :straight t
+;;  :defer nil
+;;  )
 ;; citations
 (use-package citar
   :straight t
@@ -669,6 +633,40 @@ Meant for `org-mode-hook'."
     (+org-realign-table-maybe-h))
   )
 
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; startup by system ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(when (eq system-type 'darwin)
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
+    (defun my-setup-initial-window-setup()
+    "Do initial window setup"
+    (interactive)
+;;    (setq initial-frame-alist
+;;	'((top . 0) (left . 0) (height . 65) (width . 80)))
+    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
+    ;; (org-agenda nil "z")
+    )
+  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+  (setq mac-command-modifier 'meta)
+  (setq mac-option-modifier nil)
+  
+  )
+(when (eq system-type 'gnu/linux)
+  ;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 12"))
+  ;;(set-face-attribute 'default t :font "IBM Plex Mono 14")
+  (defun my-setup-initial-window-setup()
+    "Do initial window setup"
+    (interactive)
+     (setq initial-frame-alist
+     	'((top . 0) (left . 0) (height . 65) (width . 80)))
+     ;;(set-face-attribute 'default nil :font "IBM Plex Mono Medium 14")
+     (set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
+     ;; (org-agenda nil "z")
+    )
+  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+  )
 
 
 
