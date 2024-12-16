@@ -84,15 +84,6 @@
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
 
-;; (use-package gruvbox-theme
-;;   :straight t
-;;   :config
-;;   (load-theme 'gruvbox-dark-soft t))
-(use-package zenburn-theme
-  :straight t
-  :config
-  (load-theme 'zenburn t)
-  )
 ;; Starting buffer
 (setq inhibit-startup-message t) 
 (setq initial-scratch-message nil)
@@ -223,7 +214,7 @@
 (ido-mode 1)
 ;; spelling
 (with-eval-after-load 'flyspell
-  (setq ispell-program-name "/opt/homebrew/bin/aspell")
+
   (setq ispell-list-command "--list"
 	ispell-dictionary "en_US"))
 (use-package flyspell-correct-popup
@@ -640,6 +631,11 @@ Meant for `org-mode-hook'."
 
 (when (eq system-type 'darwin)
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
+  (use-package zenburn-theme
+    :straight t
+    :config
+    (load-theme 'zenburn t)
+    )
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
@@ -651,18 +647,20 @@ Meant for `org-mode-hook'."
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   (setq mac-command-modifier 'meta)
   (setq mac-option-modifier nil)
-  
+  (setq ispell-program-name "/opt/homebrew/bin/aspell")
   )
 (when (eq system-type 'gnu/linux)
-  ;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono 12"))
-  ;;(set-face-attribute 'default t :font "IBM Plex Mono 14")
+  (use-package gruvbox-theme
+   :straight t
+   :config
+   (load-theme 'gruvbox-dark-soft t))
+
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
      (setq initial-frame-alist
      	'((top . 0) (left . 0) (height . 65) (width . 80)))
-     ;;(set-face-attribute 'default nil :font "IBM Plex Mono Medium 14")
-     (set-face-attribute 'default nil :font "DejaVu Sans Mono 14")
+     (set-face-attribute 'default nil :font "Noto Mono 14")
      ;; (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
