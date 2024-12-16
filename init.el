@@ -631,10 +631,10 @@ Meant for `org-mode-hook'."
 
 (when (eq system-type 'darwin)
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
-  (use-package zenburn-theme
+  (use-package gruvbox-theme
     :straight t
     :config
-    (load-theme 'zenburn t)
+    (load-theme 'gruvbox-dark-soft t)
     )
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
