@@ -5,6 +5,11 @@
 ;; packges, etc.  ;;
 ;;;;;;;;;;;;;;;;;;;;
 
+(when (memq window-system '(mac ns))
+  (exec-path-from-shell-initialize))
+(setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/pkg-config")
+
+
 ;; Straight package management
 (defvar bootstrap-version)
 (let ((bootstrap-file
@@ -126,6 +131,8 @@
 ;; various necessities ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+
 ;; diary
 (setq calendar-date-style 'iso)
 (setq diary-file "~/Dropbox/org/diary")
@@ -202,6 +209,18 @@
 (use-package rainbow-mode
   :straight t
   )
+
+;; swift
+(use-package swift-mode
+  :straight t
+  )
+
+;; json
+
+(use-package json-mode
+  :straight t
+  )
+
 ;; terminal emulation
 (use-package vterm
   :straight t
@@ -250,10 +269,10 @@
 ;; pdf utilites
 (use-package pdf-tools
   :straight t
-  ;; :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
+  :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
   :config
   (setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/zlib/1.3.1/lib/pkgconfig:/opt/homebrew/Cellar/poppler/24.12.0/lib/pkgconfig")
-  (pdf-tools-install)
+  ;; (pdf-tools-install)
   (setq default pdf-view-display-size 'fit-width)
   (custom-set-variables '(pdf-tools-handle-upgrades t))
   :custom
@@ -411,16 +430,16 @@
 
 
 ;; org-noter
-(use-package org-noter
-  :straight t
-  :after pdf-tools
-  :config
-  (setq org-noter-notes-search-path '("~/Dropbox/org/roam/")
-	org-noter-hide-other nil
-	org-noter-separate-notes-from-heading t
-	org-noter-always-create-frame nil
-	org-noter-auto-save-last-location t)
-  )
+;;(use-package org-noter
+;;  :straight t
+;;  :after pdf-tools
+;;  :config
+;;  (setq org-noter-notes-search-path '("~/Dropbox/org/roam/")
+;;	org-noter-hide-other nil
+;;	org-noter-separate-notes-from-heading t
+;;	org-noter-always-create-frame nil
+;;	org-noter-auto-save-last-location t)
+;;  )
 ;; org exporters
 (require 'ox)
 (defun sa-ignore-headline (contents backend info)
@@ -647,6 +666,7 @@ Meant for `org-mode-hook'."
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   (setq mac-command-modifier 'meta)
   (setq mac-option-modifier nil)
+  (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
   )
 (when (eq system-type 'gnu/linux)
