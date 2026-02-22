@@ -60,7 +60,12 @@
 	max-mini-window-height 0.5))
 ;; use GNU coreutils version of ls, which cooperates better with dired
 (setq insert-directory-program "gls") 
-
+;; kill ring and macOS clipboard
+(use-package xclip
+  :straight t
+  :config
+  (xclip-mode 1)
+  )
 
 ;; attempts at speeding startup
 
