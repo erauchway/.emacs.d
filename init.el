@@ -142,6 +142,7 @@
 (setq calendar-date-style 'iso)
 (setq diary-file "~/Dropbox/org/diary")
 (add-hook 'diary-list-entries-hook 'diary-sort-entries t)
+
 ;;completion
 (use-package company
   :straight t
@@ -202,6 +203,7 @@
   :config
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
   )
+
 ;; delimiter highlighting
 (use-package rainbow-delimiters
   :straight t
@@ -213,6 +215,15 @@
   )
 (use-package rainbow-mode
   :straight t
+  )
+
+;; git
+(use-package git-auto-commit-mode
+  :straight t
+  :config
+  (setq-default gac-automatically-push-p t)
+  (setq-default gac-automatically-add-new-files-p t)
+  (setq-default gac-ask-for-summar-p nil)
   )
 
 ;; swift
@@ -230,6 +241,7 @@
 (use-package vterm
   :straight t
   )
+
 ;; ido
 (setq ido-enable-flex-matching t
       ido-everywhere t
