@@ -30,15 +30,15 @@
 (require 'use-package)
 
 
-;; recent files 
-;; (use-package 'recentf
-;;   :init
-;;   (recentf-mode 1)
-;;   (setq recentf-max-menu-items 50)
-;;   (setq recentf-max-saved-items 50)
-;;   (run-at-time (current-time) 300 'recentf-save-list)
-;;   (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/Dropbox/org/roam/daily/*.org"))))
-;;   )
+;;recent files 
+(use-package 'recentf
+  :init
+  (recentf-mode 1)
+  (setq recentf-max-menu-items 50)
+  (setq recentf-max-saved-items 50)
+  (run-at-time (current-time) 300 'recentf-save-list)
+  (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/Dropbox/org/roam/daily/*.org"))))
+  )
 
 
 ;; Undo
@@ -89,6 +89,8 @@
 (keymap-global-set "C-c n r d y" 'org-roam-dailies-goto-yesterday)
 (keymap-global-set "C-c o t" 'vterm-other-window)
 (keymap-global-set "C-x g" 'magit-status)
+(keymap-global-set "C-x C-r" 'recentf-open)
+
 
 ;;;;;;;;;;;;;;;;
 ;; Appearance ;;
@@ -241,6 +243,12 @@
 (use-package vterm
   :straight t
   )
+(add-to-list 'display-buffer-alist
+             '("\\*vterm\\*"
+               (display-buffer-in-side-window)
+               (side . bottom)
+               (slot . 0)
+               (window-height . 0.2))) ; 20% height
 
 ;; ido
 (setq ido-enable-flex-matching t
@@ -309,244 +317,244 @@
 (defun org-candidate-files () (directory-files-recursively "~/Dropbox" "^[[:alnum::]].*\\.org\\'"))
 
 ;; org and others
-(use-package org
-  :straight t (:type built-in)
-  :hook (;;(org-mode . +org-enable-auto-reformat-tables-h)
-	 (org-mode . org-indent-mode)
-	 (org-mode . flyspell-mode))
-  :config
-  (setq org-directory "~/Dropbox/org"
-	org-odt-preferred-output-format "docx"
- 	org-odt-styles-file "~/Dropbox/common/reference2.odt"
-	org-odt-use-date-fields t
-	;; org-odt-content-template-file "~/Dropbox/common/odt_content_test.xml"
-	org-agenda-files (quote("~/Dropbox/org/roam/daily"
-				"~/Dropbox/org/roam"))
-	org-adapt-indentation t
-	org-hide-leading-stars t
-	org-refile-targets '((org-refile-candidates :maxlevel . 3))
-	org-refile-use-outline-path t
-	org-outline-path-complete-in-steps t
-	org-todo-keywords (quote ((sequence "TODO(t)"
-					    "PROJ(p)"
-					    "LOOP(r)"
-					    "STARTED(s)"
-					    "WAIT(w)"
-					    "HOLD(h)"
-					    "IDEA(i)"
-					    "|"
-					    "DONE(d)"
-					    "KILL(k)")
-				  (sequence "[ ](T)"
-					    "[-](S)"
-					    "[?](W)"
-					    "|"
-					    "[X](D)")
-				  (sequence "|"
-					    "OKAY(o)"
-					    "YES(y)"
-					    "NO(n)")))
-	org-todo-keyword-faces (quote(("TODO" . "#F89C74")
-				      ("IDEA" . "#8BE0A4")
-				      ("STARTED" . "#b5b991")
-				      ("DONE" . "#3d5941")
-				      ("PROJ" . "#A16928"))))
-  )
+;; (use-package org
+;;   :straight t (:type built-in)
+;;   :hook (;;(org-mode . +org-enable-auto-reformat-tables-h)
+;; 	 (org-mode . org-indent-mode)
+;; 	 (org-mode . flyspell-mode))
+;;   :config
+;;   (setq org-directory "~/Dropbox/org"
+;; 	org-odt-preferred-output-format "docx"
+;;  	org-odt-styles-file "~/Dropbox/common/reference2.odt"
+;; 	org-odt-use-date-fields t
+;; 	;; org-odt-content-template-file "~/Dropbox/common/odt_content_test.xml"
+;; 	org-agenda-files (quote("~/Dropbox/org/roam/daily"
+;; 				"~/Dropbox/org/roam"))
+;; 	org-adapt-indentation t
+;; 	org-hide-leading-stars t
+;; 	org-refile-targets '((org-refile-candidates :maxlevel . 3))
+;; 	org-refile-use-outline-path t
+;; 	org-outline-path-complete-in-steps t
+;; 	org-todo-keywords (quote ((sequence "TODO(t)"
+;; 					    "PROJ(p)"
+;; 					    "LOOP(r)"
+;; 					    "STARTED(s)"
+;; 					    "WAIT(w)"
+;; 					    "HOLD(h)"
+;; 					    "IDEA(i)"
+;; 					    "|"
+;; 					    "DONE(d)"
+;; 					    "KILL(k)")
+;; 				  (sequence "[ ](T)"
+;; 					    "[-](S)"
+;; 					    "[?](W)"
+;; 					    "|"
+;; 					    "[X](D)")
+;; 				  (sequence "|"
+;; 					    "OKAY(o)"
+;; 					    "YES(y)"
+;; 					    "NO(n)")))
+;; 	org-todo-keyword-faces (quote(("TODO" . "#F89C74")
+;; 				      ("IDEA" . "#8BE0A4")
+;; 				      ("STARTED" . "#b5b991")
+;; 				      ("DONE" . "#3d5941")
+;; 				      ("PROJ" . "#A16928"))))
+;;   )
 
-(use-package org-roam
-  :straight t
-  :after org
-  :hook (org-roam-mode . visual-line-mode)
-  :config
-  (setq org-roam-directory "~/Dropbox/org/roam/"
-	org-roam-index-file "~/Dropbox/org/roam/index.org"
-	org-roam-dailies-directory "~/Dropbox/org/roam/daily/"
-	org-roam-dailies-capture-templates '(("d" "default" entry
-         "* %?"
-         :target (file+head "%<%Y-%m-%d>-daily.org"
-                            "#+title: %<%Y-%m-%d>-daily.org\n"
-                            )))
-	)
-  (org-roam-db-autosync-mode)
-  )
-(setq org-agenda-window-setup (quote current-window))
-(use-package org-super-agenda
-  :straight t
-  :after org
-  :init
-  (setq org-agenda-skip-scheduled-if-done t
-                    org-agenda-timegrid-use-ampm t
-                    org-agenda-skip-deadline-if-done t
-		    org-agenda-skip-scheduled-if-deadline-is-shown t
-		    org-agenda-skip-deadline-prewarning-if-scheduled t
-		    org-agenda-skip-timestamp-if-done t
-                    org-agenda-include-diary t
-                    org-agenda-include-deadlines t
-                    org-deadline-warning-days 45
-                    org-agenda-todo-ignore-deadlines (quote far)
-                    org-agenda-todo-ignore-scheduled (quote far)
-                    org-agenda-compact-blocks t
-		    org-agenda-start-day nil
-                    org-agenda-start-with-log-mode t
-                    org-agenda-span 10
-                    ;; org-agenda-view-columns-initially t
-                    org-columns-default-format "%TODO %25Item %14Deadline %Clocksum_t"
-                    org-agenda-start-on-weekday nil
-                    org-agenda-prefix-format '(
-                                               (agenda . " %s %t ")
-                                               (timeline . " - ")
-                                               (todo . "  %(let ((scheduled (org-get-scheduled-time (point)))) (if scheduled (format-time-string \"%Y-%m-%d %I:%M %p\" scheduled) \"\")) ")
-                                               (tags . " %s %t ")
-                                               (search . " - ")))
-;; borrowed from Https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
-              (setq org-agenda-custom-commands
-                    '(("z" "Super view"
-                       (
-                        (agenda "" ((org-agenda-overriding-header "")
-                                    (org-super-agenda-groups
-                                     '(
-                                       (:name ""
-                                        :time-grid t
-                                        :log t
-                                        :date today
-                                        :order 1
-					;; :discard (:not (:todo "TODO")))
-                                        :discard (:anything))
-                                       ))))
-                        (alltodo "" ((org-agenda-overriding-header "")
-                                     (org-super-agenda-groups
-                                      '(
-                                         (:name "Due today"
-                                                :deadline today
-                                                :order 1)
-                                        (:name "Due soon"
-                                               :deadline future
-                                               :scheduled future
-                                               :order 0)
-                                        (:name "Overdue"
-                                               :deadline past
-                                               :order 7)
-                                        (:name "Soonest"
-                                               :priority "A"
-                                        )
-                                        (:name "Secondary"
-                                               :priority "B"
-                                        )
-                                        (:name "Someday"
-                                               :priority "C"
-                                        )
-                                        ;;(:auto-group t)
-                                        ;;(:auto-priority t)
-					;; (:discard (:anything))
-					(:discard (:not (:todo "TODO")))
-                                        ))))))))
-              :config
-              (org-super-agenda-mode)
-	      )
-
-
-
-;; org-noter
-;;(use-package org-noter
-;;  :straight t
-;;  :after pdf-tools
-;;  :config
-;;  (setq org-noter-notes-search-path '("~/Dropbox/org/roam/")
-;;	org-noter-hide-other nil
-;;	org-noter-separate-notes-from-heading t
-;;	org-noter-always-create-frame nil
-;;	org-noter-auto-save-last-location t)
-;;  )
-;; org exporters
-(require 'ox)
-(defun sa-ignore-headline (contents backend info)
-  "Ignore headlines with tag `ignoreheading'."
-  (when (and (org-export-derived-backend-p backend 'latex 'odt 'pandoc 'docx)
-          (string-match "\\`.*ignoreheading.*\n"
-                (downcase contents)))
-    (replace-match "" nil nil contents)
-    )
-  )
-  (add-to-list 'org-export-filter-headline-functions 'sa-ignore-headline)
-  ;; turns off tags for export to reveal, so "ignoreheading" doesn't appear there
-  (defun turn-off-tags
-    (orig &optional async subtreep visible-only body-only ext-plist)
-  (let ((org-export-with-tags nil))
-    (funcall orig async subtreep visible-only body-only ext-plist)))
-  ;; tell org export to delete, among other temporary tex files, those marked bbl and tex
-  (add-to-list 'org-latex-logfiles-extensions "bbl")
-  (add-to-list 'org-latex-logfiles-extensions "tex")
-;; for ox-latex
-(with-eval-after-load 'ox-latex
-(add-to-list 'org-latex-classes
-             '("tufte-handout"
-               "\\documentclass[nobib]{tufte-handout}"
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\subsection{%s}" . "\\subsection*{%s}")
-               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-               ("\\paragraph{%s}" . "\\paragraph*{%s}")
-               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-(add-to-list 'org-latex-classes
-                '("letter"
-                  "\\documentclass{letter}"
-                  ("\\section{%s}" . "\\section*{%s}")
-                  ("\\subsection{%s}" . "\\subsection*{%s}")
-                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-(add-to-list 'org-latex-classes
-             '("koma-letter"
-               "\\documentclass{scrlttr2}"))
-(add-to-list 'org-latex-classes
-                '("uc-own"
-                  "\\documentclass{uc-own}"
-                  ("\\section{%s}" . "\\section*{%s}")
-                  ("\\subsection{%s}" . "\\subsection*{%s}")
-                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-(add-to-list 'org-latex-classes
-             '("koma-article"
-               "\\documentclass{scrartcl}"
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\subsection{%s}" . "\\subsection*{%s}")
-               ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-               ("\\paragraph{%s}" . "\\paragraph*{%s}")
-               ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-)
-;; for reveal presentations
-;; (use-package ox-reveal
+;; (use-package org-roam
 ;;   :straight t
-
+;;   :after org
+;;   :hook (org-roam-mode . visual-line-mode)
+;;   :config
+;;   (setq org-roam-directory "~/Dropbox/org/roam/"
+;; 	org-roam-index-file "~/Dropbox/org/roam/index.org"
+;; 	org-roam-dailies-directory "~/Dropbox/org/roam/daily/"
+;; 	org-roam-dailies-capture-templates '(("d" "default" entry
+;;          "* %?"
+;;          :target (file+head "%<%Y-%m-%d>-daily.org"
+;;                             "#+title: %<%Y-%m-%d>-daily.org\n"
+;;                             )))
+;; 	)
+;;   (org-roam-db-autosync-mode)
 ;;   )
-(use-package org-re-reveal
-  :straight t
-  :config
-  (setq org-re-reveal-root "~/Dropbox/common/reveal.js")
-  )
+;; (setq org-agenda-window-setup (quote current-window))
+;; (use-package org-super-agenda
+;;   :straight t
+;;   :after org
+;;   :init
+;;   (setq org-agenda-skip-scheduled-if-done t
+;;                     org-agenda-timegrid-use-ampm t
+;;                     org-agenda-skip-deadline-if-done t
+;; 		    org-agenda-skip-scheduled-if-deadline-is-shown t
+;; 		    org-agenda-skip-deadline-prewarning-if-scheduled t
+;; 		    org-agenda-skip-timestamp-if-done t
+;;                     org-agenda-include-diary t
+;;                     org-agenda-include-deadlines t
+;;                     org-deadline-warning-days 45
+;;                     org-agenda-todo-ignore-deadlines (quote far)
+;;                     org-agenda-todo-ignore-scheduled (quote far)
+;;                     org-agenda-compact-blocks t
+;; 		    org-agenda-start-day nil
+;;                     org-agenda-start-with-log-mode t
+;;                     org-agenda-span 10
+;;                     ;; org-agenda-view-columns-initially t
+;;                     org-columns-default-format "%TODO %25Item %14Deadline %Clocksum_t"
+;;                     org-agenda-start-on-weekday nil
+;;                     org-agenda-prefix-format '(
+;;                                                (agenda . " %s %t ")
+;;                                                (timeline . " - ")
+;;                                                (todo . "  %(let ((scheduled (org-get-scheduled-time (point)))) (if scheduled (format-time-string \"%Y-%m-%d %I:%M %p\" scheduled) \"\")) ")
+;;                                                (tags . " %s %t ")
+;;                                                (search . " - ")))
+;; ;; borrowed from Https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
+;;               (setq org-agenda-custom-commands
+;;                     '(("z" "Super view"
+;;                        (
+;;                         (agenda "" ((org-agenda-overriding-header "")
+;;                                     (org-super-agenda-groups
+;;                                      '(
+;;                                        (:name ""
+;;                                         :time-grid t
+;;                                         :log t
+;;                                         :date today
+;;                                         :order 1
+;; 					;; :discard (:not (:todo "TODO")))
+;;                                         :discard (:anything))
+;;                                        ))))
+;;                         (alltodo "" ((org-agenda-overriding-header "")
+;;                                      (org-super-agenda-groups
+;;                                       '(
+;;                                          (:name "Due today"
+;;                                                 :deadline today
+;;                                                 :order 1)
+;;                                         (:name "Due soon"
+;;                                                :deadline future
+;;                                                :scheduled future
+;;                                                :order 0)
+;;                                         (:name "Overdue"
+;;                                                :deadline past
+;;                                                :order 7)
+;;                                         (:name "Soonest"
+;;                                                :priority "A"
+;;                                         )
+;;                                         (:name "Secondary"
+;;                                                :priority "B"
+;;                                         )
+;;                                         (:name "Someday"
+;;                                                :priority "C"
+;;                                         )
+;;                                         ;;(:auto-group t)
+;;                                         ;;(:auto-priority t)
+;; 					;; (:discard (:anything))
+;; 					(:discard (:not (:todo "TODO")))
+;;                                         ))))))))
+;;               :config
+;;               (org-super-agenda-mode)
+;; 	      )
 
 
-(require 'ox-odt)
-;; (use-package ox-odt
-;; ;;  see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
-;;   :straight (org-mode-ox-odt
+
+;; ;; org-noter
+;; ;;(use-package org-noter
+;; ;;  :straight t
+;; ;;  :after pdf-tools
+;; ;;  :config
+;; ;;  (setq org-noter-notes-search-path '("~/Dropbox/org/roam/")
+;; ;;	org-noter-hide-other nil
+;; ;;	org-noter-separate-notes-from-heading t
+;; ;;	org-noter-always-create-frame nil
+;; ;;	org-noter-auto-save-last-location t)
+;; ;;  )
+;; ;; org exporters
+;; (require 'ox)
+;; (defun sa-ignore-headline (contents backend info)
+;;   "Ignore headlines with tag `ignoreheading'."
+;;   (when (and (org-export-derived-backend-p backend 'latex 'odt 'pandoc 'docx)
+;;           (string-match "\\`.*ignoreheading.*\n"
+;;                 (downcase contents)))
+;;     (replace-match "" nil nil contents)
+;;     )
+;;   )
+;;   (add-to-list 'org-export-filter-headline-functions 'sa-ignore-headline)
+;;   ;; turns off tags for export to reveal, so "ignoreheading" doesn't appear there
+;;   (defun turn-off-tags
+;;     (orig &optional async subtreep visible-only body-only ext-plist)
+;;   (let ((org-export-with-tags nil))
+;;     (funcall orig async subtreep visible-only body-only ext-plist)))
+;;   ;; tell org export to delete, among other temporary tex files, those marked bbl and tex
+;;   (add-to-list 'org-latex-logfiles-extensions "bbl")
+;;   (add-to-list 'org-latex-logfiles-extensions "tex")
+;; ;; for ox-latex
+;; (with-eval-after-load 'ox-latex
+;; (add-to-list 'org-latex-classes
+;;              '("tufte-handout"
+;;                "\\documentclass[nobib]{tufte-handout}"
+;;                ("\\section{%s}" . "\\section*{%s}")
+;;                ("\\subsection{%s}" . "\\subsection*{%s}")
+;;                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+;;                ("\\paragraph{%s}" . "\\paragraph*{%s}")
+;;                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+;; (add-to-list 'org-latex-classes
+;;                 '("letter"
+;;                   "\\documentclass{letter}"
+;;                   ("\\section{%s}" . "\\section*{%s}")
+;;                   ("\\subsection{%s}" . "\\subsection*{%s}")
+;;                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+;; (add-to-list 'org-latex-classes
+;;              '("koma-letter"
+;;                "\\documentclass{scrlttr2}"))
+;; (add-to-list 'org-latex-classes
+;;                 '("uc-own"
+;;                   "\\documentclass{uc-own}"
+;;                   ("\\section{%s}" . "\\section*{%s}")
+;;                   ("\\subsection{%s}" . "\\subsection*{%s}")
+;;                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
+;; (add-to-list 'org-latex-classes
+;;              '("koma-article"
+;;                "\\documentclass{scrartcl}"
+;;                ("\\section{%s}" . "\\section*{%s}")
+;;                ("\\subsection{%s}" . "\\subsection*{%s}")
+;;                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+;;                ("\\paragraph{%s}" . "\\paragraph*{%s}")
+;;                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
+;; )
+;; ;; for reveal presentations
+;; ;; (use-package ox-reveal
+;; ;;   :straight t
+
+;; ;;   )
+;; (use-package org-re-reveal
+;;   :straight t
+;;   :config
+;;   (setq org-re-reveal-root "~/Dropbox/common/reveal.js")
+;;   )
+
+
+;; (require 'ox-odt)
+;; ;; (use-package ox-odt
+;; ;; ;;  see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
+;; ;;   :straight (org-mode-ox-odt
+;; ;; 	     :host github
+;; ;; 	     :repo "kjambunathan/org-mode-ox-odt"
+;; ;; 	     :files ("lisp/ox-odt.el"
+;; ;; 		     "lisp/odt.el"
+;; ;; 		     "etc"
+;; ;; 		     "docs"
+;; ;; 		     "contrib/odt/LibreOffice"))
+;; ;;   :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
+;; ;;   )
+
+
+;; (use-package ox-pandoc
+;;   :straight (ox-pandoc
 ;; 	     :host github
-;; 	     :repo "kjambunathan/org-mode-ox-odt"
-;; 	     :files ("lisp/ox-odt.el"
-;; 		     "lisp/odt.el"
-;; 		     "etc"
-;; 		     "docs"
-;; 		     "contrib/odt/LibreOffice"))
-;;   :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
+;; 	     :repo "emacsorphanage/ox-pandoc"
+;; 	     :files ("ox-pandoc.el"))
+;;   :config (add-to-list 'org-pandoc-valid-options 'from)
+;;   )  
+;; (with-eval-after-load "org"
+;;   (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
 ;;   )
-
-
-(use-package ox-pandoc
-  :straight (ox-pandoc
-	     :host github
-	     :repo "emacsorphanage/ox-pandoc"
-	     :files ("ox-pandoc.el"))
-  :config (add-to-list 'org-pandoc-valid-options 'from)
-  )  
-(with-eval-after-load "org"
-  (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
-  )
 ;; on getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
 (use-package emacsql
   :straight t
@@ -574,8 +582,8 @@
   :config (citar-embark-mode)
   )
 (setq citar-bibliography '("~/Dropbox/common/big_bib.json"))
-(setq org-cite-global-bibliography '("~/Dropbox/common/big_bib.json"))
-(setq org-cite-csl-styles-dir '("~/Zotero/styles"))
+;; (setq org-cite-global-bibliography '("~/Dropbox/common/big_bib.json"))
+;; (setq org-cite-csl-styles-dir '("~/Zotero/styles"))
 (use-package markdown-mode
   :straight t
   :mode ("README\\.md\\'" . gfm-mode)
@@ -638,27 +646,27 @@
   ;;:mode (("\\.qmd" . poly-quarto-mode))
   )
 ;; doom cribs
-(defun +org-realign-table-maybe-h ()
-  "Auto-align table under cursor."
-  (when (and org-table-automatic-realign (org-at-table-p) org-table-may-need-update)
-    (let ((pt (point))
-          (inhibit-message t))
-      (if org-table-may-need-update (org-table-align))
-      (goto-char pt)))
-  )
-(defun +org-enable-auto-reformat-tables-h ()
-  "Realign tables & update formulas when exiting insert mode (`evil-mode').
-Meant for `org-mode-hook'."
-  (when (featurep 'evil)
-    (add-hook 'evil-insert-state-exit-hook #'+org-realign-table-maybe-h nil t)
-    (add-hook 'evil-replace-state-exit-hook #'+org-realign-table-maybe-h nil t)
-    (advice-add #'evil-replace :after #'+org-realign-table-maybe-a))
-  )
-(defun +org-realign-table-maybe-a (&rest _)
-  "Auto-align table under cursor and re-calculate formulas."
-  (when (eq major-mode 'org-mode)
-    (+org-realign-table-maybe-h))
-  )
+;; (defun +org-realign-table-maybe-h ()
+;;   "Auto-align table under cursor."
+;;   (when (and org-table-automatic-realign (org-at-table-p) org-table-may-need-update)
+;;     (let ((pt (point))
+;;           (inhibit-message t))
+;;       (if org-table-may-need-update (org-table-align))
+;;       (goto-char pt)))
+;;   )
+;; (defun +org-enable-auto-reformat-tables-h ()
+;;   "Realign tables & update formulas when exiting insert mode (`evil-mode').
+;; Meant for `org-mode-hook'."
+;;   (when (featurep 'evil)
+;;     (add-hook 'evil-insert-state-exit-hook #'+org-realign-table-maybe-h nil t)
+;;     (add-hook 'evil-replace-state-exit-hook #'+org-realign-table-maybe-h nil t)
+;;     (advice-add #'evil-replace :after #'+org-realign-table-maybe-a))
+;;   )
+;; (defun +org-realign-table-maybe-a (&rest _)
+;;   "Auto-align table under cursor and re-calculate formulas."
+;;   (when (eq major-mode 'org-mode)
+;;     (+org-realign-table-maybe-h))
+;;   )
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;
