@@ -31,7 +31,7 @@
 
 
 ;;recent files 
-(use-package 'recentf
+(use-package recentf
   :init
   (recentf-mode 1)
   (setq recentf-max-menu-items 50)
