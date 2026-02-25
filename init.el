@@ -308,6 +308,12 @@
 (use-package magit
   :straight t
   )
+(setq magit-display-buffer-function
+      (lambda (buffer)
+	(display-buffer buffer
+			'(display-buffer-in-side-window
+			  (side . bottom)
+			  (window-height . 0.3)))))
 
 ;;;;;;;;;
 ;; org ;;
@@ -673,8 +679,8 @@
 ;; startup by system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(when (eq system-type 'darwin)
-  (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
+(when (string= system-name "Erics-Mac-mini.local") 
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 90)))
   (use-package gruvbox-theme
     :straight t
     :config
@@ -684,7 +690,7 @@
     "Do initial window setup"
     (interactive)
 ;;    (setq initial-frame-alist
-;;	'((top . 0) (left . 0) (height . 65) (width . 80)))
+;; '((top . 0) (left . 0) (height . 65) (width . 80)))
     (set-face-attribute 'default nil :font "IBM Plex Mono 14")
     ;; (org-agenda nil "z")
     )
@@ -694,6 +700,8 @@
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
   )
+
+
 (when (eq system-type 'gnu/linux)
   (use-package gruvbox-theme
    :straight t
@@ -711,7 +719,27 @@
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   )
 
-
+(defun transcript-polish ()
+  "Unwraps choppy transcript lines and creates clean 80-char paragraphs."
+  (interactive)
+  (save-excursion
+    ;; 1. Join all lines in the buffer (or region)
+    (let ((beg (if (use-region-p) (region-beginning) (point-min)))
+          (end (if (use-region-p) (region-end) (point-max))))
+      (subst-char-in-region beg end ?\n ?\ )
+      
+      ;; 2. Inject double-newlines after every 6th sentence
+      (goto-char beg)
+      (let ((count 0))
+        (while (re-search-forward "[.!?] " nil t)
+          (setq count (1+ count))
+          (when (= count 6)
+            (replace-match (concat (match-string 0) "\n\n"))
+            (setq count 0))))
+      
+      ;; 3. Clean up the wrapping
+      (setq fill-column 80)
+      (fill-region (point-min) (point-max)))))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
