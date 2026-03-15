@@ -215,6 +215,7 @@
 	 (inferior-ess-r-mode . rainbow-delimiters-mode)
 	 (markdown-mode . rainbow-delimiters-mode))
   )
+
 (use-package rainbow-mode
   :straight t
   )
@@ -223,9 +224,9 @@
 (use-package git-auto-commit-mode
   :straight t
   :config
-  (setq-default gac-automatically-push-p t)
   (setq-default gac-automatically-add-new-files-p t)
-  (setq-default gac-ask-for-summar-p nil)
+  (setq-default gac-automatically-push-p t)
+  (setq-default gac-ask-for-summary-p nil)
   )
 
 ;; swift
@@ -269,40 +270,40 @@
   :straight t
    )
 ;; deft for org search
-(use-package deft
-  :straight t
-  :config
-  (setq deft-extensions '("org" "md" "qmd" "rmd"))
-  (setq deft-directory "~/Dropbox/org"
-        deft-recursive t
-	deft-use-filename-as-title t)
-  )
-;; a list of possible deft directories; https://www.reddit.com/r/emacs/comments/h0h4ix/how_to_configure_multile_directories_with_deft/
-(defvar my/deft-dir-list '()
-  "A list of deft directories to pick")
+;; (use-package deft
+;;   :straight t
+;;   :config
+;;   (setq deft-extensions '("org" "md" "qmd" "rmd"))
+;;   (setq deft-directory "~/Dropbox/org"
+;;         deft-recursive t
+;; 	deft-use-filename-as-title t)
+;;   )
+;; ;; a list of possible deft directories; https://www.reddit.com/r/emacs/comments/h0h4ix/how_to_configure_multile_directories_with_deft/
+;; (defvar my/deft-dir-list '()
+;;   "A list of deft directories to pick")
 
-(setq my/deft-dir-list '("~/Dropbox/org/"
-                         "~/Dropbox/writing_proj/"
-                         ))
+;; (setq my/deft-dir-list '("~/Dropbox/org/"
+;;                          "~/Dropbox/writing_proj/"
+;;                          ))
 
-(defun my/pick-deft-dir ()
-  "Select directories from a list"
-  (interactive)
-  (setq deft-directory 
-        (ido-completing-read "Select directory: " my/deft-dir-list))
-  (deft-refresh))
+;; (defun my/pick-deft-dir ()
+;;   "Select directories from a list"
+;;   (interactive)
+;;   (setq deft-directory 
+;;         (ido-completing-read "Select directory: " my/deft-dir-list))
+;;   (deft-refresh))
 ;; pdf utilites
-(use-package pdf-tools
-  :straight t
-  :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
-  :config
-  (setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/zlib/1.3.1/lib/pkgconfig:/opt/homebrew/Cellar/poppler/24.12.0/lib/pkgconfig")
-  ;; (pdf-tools-install)
-  (setq default pdf-view-display-size 'fit-width)
-  (custom-set-variables '(pdf-tools-handle-upgrades t))
-  :custom
-  (pdf-annot-activate-created-annotations t "automatically annotate highlights")
-  )
+;; (use-package pdf-tools
+;;   :straight t
+;;   :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
+;;   :config
+;;   (setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/zlib/1.3.1/lib/pkgconfig:/opt/homebrew/Cellar/poppler/24.12.0/lib/pkgconfig")
+;;   ;; (pdf-tools-install)
+;;   (setq default pdf-view-display-size 'fit-width)
+;;   (custom-set-variables '(pdf-tools-handle-upgrades t))
+;;   :custom
+;;   (pdf-annot-activate-created-annotations t "automatically annotate highlights")
+;;   )
 
 ;; magit
 (use-package magit
@@ -315,6 +316,10 @@
 			  (side . bottom)
 			  (window-height . 0.3)))))
 
+(use-package writeroom-mode
+  :straight t
+  )
+
 ;;;;;;;;;
 ;; org ;;
 ;;;;;;;;;
@@ -323,11 +328,11 @@
 (defun org-candidate-files () (directory-files-recursively "~/Dropbox" "^[[:alnum::]].*\\.org\\'"))
 
 ;; org and others
-;; (use-package org
-;;   :straight t (:type built-in)
-;;   :hook (;;(org-mode . +org-enable-auto-reformat-tables-h)
-;; 	 (org-mode . org-indent-mode)
-;; 	 (org-mode . flyspell-mode))
+(use-package org
+  :straight t (:type built-in)
+  :hook (;;(org-mode . +org-enable-auto-reformat-tables-h)
+	 (org-mode . org-indent-mode)
+	 (org-mode . flyspell-mode))
 ;;   :config
 ;;   (setq org-directory "~/Dropbox/org"
 ;; 	org-odt-preferred-output-format "docx"
@@ -365,7 +370,7 @@
 ;; 				      ("STARTED" . "#b5b991")
 ;; 				      ("DONE" . "#3d5941")
 ;; 				      ("PROJ" . "#A16928"))))
-;;   )
+   )
 
 ;; (use-package org-roam
 ;;   :straight t
@@ -701,6 +706,28 @@
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
   )
 
+(when (string= system-name "Erics-Macbook-Air.local") 
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
+  (use-package gruvbox-theme
+    :straight t
+    :config
+    (load-theme 'gruvbox-dark-soft t)
+    )
+    (defun my-setup-initial-window-setup()
+    "Do initial window setup"
+    (interactive)
+;;    (setq initial-frame-alist
+;; '((top . 0) (left . 0) (height . 65) (width . 80)))
+    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
+    ;; (org-agenda nil "z")
+    )
+  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+  (setq mac-command-modifier 'meta)
+  (setq mac-option-modifier nil)
+  (setq mac-control-modifier 'control)
+  (setq ispell-program-name "/opt/homebrew/bin/aspell")
+  )
+
 
 (when (eq system-type 'gnu/linux)
   (use-package gruvbox-theme
@@ -718,6 +745,132 @@
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   )
+
+(defun writing-mode ()
+  (interactive)
+  (setq buffer-face-mode-face '(:family "IBM Plex Mono" :height 150))
+  (buffer-face-mode)
+  (linum-mode 0)
+  (writeroom-mode 1)
+  (blink-cursor-mode)
+  (visual-line-mode 1)
+  (setq truncate-lines nil)
+  (setq-default line-spacing 5)
+  (setq global-hl-line-mode nil)
+  )
+
+(defvar my/ia-writer-colors-light '(:bg "#f5f5f5" :fg "#424242" :cursor "#007aff"))
+(defvar my/ia-writer-colors-dark  '(:bg "#111111" :fg "#e0e0e0" :cursor "#007aff"))
+
+(use-package olivetti
+  :straight t
+  )
+
+
+;;; iA Writer emulation
+
+
+;; --- 1. Variables & Palettes ---
+(defvar my/ia-writer-colors-light '(:bg "#f5f5f5" :fg "#424242" :cursor "#007aff"))
+(defvar my/ia-writer-colors-dark  '(:bg "#111111" :fg "#e0e0e0" :cursor "#007aff"))
+(defvar my/ia-current-style 'dark)
+
+;; --- 2. The Core Aesthetic Function ---
+
+(defun my/apply-ia-style (palette)
+  "Sets the actual frame background to eliminate bars."
+  (let ((bg (plist-get palette :bg))
+        (fg (plist-get palette :fg))
+        (cursor (plist-get palette :cursor)))
+    
+    ;; 1. Set the actual frame background
+    ;; This eliminates the side bars by making the whole window one color
+    (set-background-color bg)
+    (set-foreground-color fg)
+    
+    ;; 2. The Layout (Centering)
+    (if (fboundp 'olivetti-mode)
+        (progn
+          (setq-local olivetti-body-width 85)
+          (setq-local olivetti-color bg)
+          (olivetti-mode 1)))
+    
+    ;; 3. Typography
+    (face-remap-add-relative 'default :family "iA Writer Quattro V" :height 140)
+    
+    ;; 4. UI Face Overrides (Fringe & Mode-line)
+    (set-face-attribute 'fringe nil :background bg :foreground bg)
+    (set-face-attribute 'mode-line nil :background bg :foreground fg :box nil)
+    (set-face-attribute 'mode-line-inactive nil :background bg :foreground fg :box nil)
+    ;; Fix the selection (region) color
+    (if (eq my/ia-current-style 'dark)
+        (face-remap-add-relative 'region :background "#333333" :foreground "#ffffff")
+      (face-remap-add-relative 'region :background "#d1e7fe" :foreground "#000000"))
+
+    ;; 5. The Content Cleanse
+    (dolist (face '(markdown-header-face-1 markdown-header-face-2 
+                    markdown-header-face-3 markdown-header-face-4 
+                    markdown-header-face-5 markdown-header-face-6
+                    markdown-link-face markdown-url-face 
+                    markdown-blockquote-face))
+      (face-remap-add-relative face :foreground fg :weight 'bold))
+
+    ;; 6. Word Count & Scrolling
+    (if (fboundp 'wc-mode) (wc-mode 1))
+    (setq-local mode-line-format 
+                '("%e" (:eval (propertize " " 'display `(space :align-to (- right 15))))
+                  (:eval (format "Words: %d" (count-words (point-min) (point-max))))))
+
+    (setq-local scroll-margin 99)
+    (setq-local maximum-scroll-margin 0.5)
+    (set-cursor-color cursor)
+    (setq-local cursor-type 'bar)
+    (display-line-numbers-mode -1)
+    (recenter)))
+
+;; --- 7. The Cleanup (Crucial!) ---
+;; This returns Emacs to Gruvbox when you leave Markdown mode
+;; (defun my/restore-global-theme ()
+;;   "Restores the global theme colors when leaving iA Writer mode."
+;;   (unless (derived-mode-p 'markdown-mode)
+;;     ;; Replace these with your actual Gruvbox hex codes if they don't restore
+;;     ;; usually (load-theme 'gruvbox-dark-soft t) works here
+;;     (set-face-attribute 'fringe nil :background nil :foreground nil)
+;;     (set-face-attribute 'mode-line nil :box t) ; Restore mode-line border
+;;     (message "Restored global theme")))
+
+;; (add-hook 'buffer-list-update-hook #'my/restore-global-theme)
+
+;; --- 3. Manual Toggle & Auto-Timer ---
+(defun my/set-ia-light () (interactive) (my/apply-ia-style my/ia-writer-colors-light))
+(defun my/set-ia-dark ()  (interactive) (my/apply-ia-style my/ia-writer-colors-dark))
+
+(defun my/toggle-ia-writer-style ()
+  "Toggle between iA Writer Light and Dark modes."
+  (interactive)
+  (if (eq my/ia-current-style 'dark)
+      (progn (my/set-ia-light) (setq my/ia-current-style 'light) (message "iA Writer: Day"))
+    (progn (my/set-ia-dark) (setq my/ia-current-style 'dark) (message "iA Writer: Night"))))
+
+(defun my/ia-auto-update-style ()
+  "Switch style based on time: Day (7am-7pm), Night (7pm-7am)."
+  (let ((hour (string-to-number (format-time-string "%H"))))
+    (if (and (>= hour 7) (< hour 19))
+        (progn (my/set-ia-light) (setq my/ia-current-style 'light))
+      (progn (my/set-ia-dark) (setq my/ia-current-style 'dark)))))
+
+;; --- 4. Robust Activation ---
+(defun my/activate-ia-writer-setup ()
+  "Forces the iA Writer setup to run correctly after the buffer settles."
+  (run-with-idle-timer 0.1 nil #'my/ia-auto-update-style))
+
+(add-hook 'markdown-mode-hook #'my/activate-ia-writer-setup)
+(run-with-timer 0 3600 #'my/ia-auto-update-style)
+
+(with-eval-after-load 'markdown-mode
+  (define-key markdown-mode-map (kbd "<f9>") #'my/toggle-ia-writer-style))
+;;; end iA Writer emulation
+
 
 (defun transcript-polish ()
   "Unwraps choppy transcript lines and creates clean 80-char paragraphs."
@@ -747,7 +900,13 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0" "871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8" "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a" "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3" default)))
+   '("9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0"
+     "871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8"
+     "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a"
+     "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3"
+     default))
+ '(ignored-local-variable-values
+   '((gac-ask-for-summary-p) (gac-automatically-add-new-files-p . t))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

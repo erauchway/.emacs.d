@@ -1,1 +1,3 @@
-((magit-pull nil))
+((magit-commit
+  ("--all"))
+ (magit-pull nil))
