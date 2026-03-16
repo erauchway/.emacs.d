@@ -5,9 +5,9 @@
 ;; packges, etc.  ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize))
-(setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/pkg-config")
+;; (when (memq window-system '(mac ns))
+;;  (exec-path-from-shell-initialize))
+;; (setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/pkg-config")
 
 
 ;; Straight package management
@@ -292,13 +292,12 @@
 ;;   (setq deft-directory 
 ;;         (ido-completing-read "Select directory: " my/deft-dir-list))
 ;;   (deft-refresh))
-;; pdf utilites
-(use-package pdf-tools
-  :straight t
-  :config
-  (pdf-tools-install)
-  (setq-default pdf-view-display-size 'fit-page)
-  (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
+
+(with-demoted-errors "Path Error: %s"
+  (straight-use-package 'exec-path-from-shell)
+  (when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize)))
+
 
 ;; magit
 (use-package magit
@@ -703,6 +702,46 @@
 (defvar my/ia-writer-colors-dark  '(:bg "#111111" :fg "#e0e0e0" :cursor "#007aff" :selection "#103050"))
 (defvar my/ia-current-style 'dark)
 
+;; pdf
+;; 1. Setup the Homebrew path first
+(setenv "PATH" (concat "/opt/homebrew/bin:/usr/local/bin:" (getenv "PATH")))
+(add-to-list 'exec-path "/opt/homebrew/bin")
+
+(straight-use-package 'pdf-tools)
+
+(let* ((pdf-path (expand-file-name "straight/build/pdf-tools/" user-emacs-directory))
+       (pdf-bin (expand-file-name "epdfinfo" pdf-path)))
+  
+  (setq pdf-info-epdfinfo-program pdf-bin)
+  (add-to-list 'load-path pdf-path)
+
+  ;; 2. Logic: If the binary is gone (because we deleted it), run a fresh install.
+  ;; If it's there, just try to start it.
+  (if (file-exists-p pdf-bin)
+      (with-demoted-errors "PDF Load Error: %s"
+        (require 'pdf-tools)
+        (require 'pdf-view)
+        (pdf-info-process-assert-running))
+    (message "PDF Tools binary missing. Run M-x pdf-tools-install manually.")))
+
+(setq auto-mode-alist (cons '("\\.pdf\\'" . pdf-view-mode) auto-mode-alist))
+
+;; 3. Remove all hooks for now to ensure a "plain" success first
+(with-eval-after-load 'pdf-view
+  ;; 1. Define the colors from your iA theme
+  (setq pdf-view-midnight-colors 
+        (cons (plist-get my/ia-writer-colors-dark :fg)
+              (plist-get my/ia-writer-colors-dark :bg)))
+
+  ;; 2. Create a function to apply the style safely
+  (defun my/pdf-view-setup ()
+    (pdf-view-midnight-minor-mode 1)
+    (pdf-view-fit-page-to-window))
+
+  ;; 3. Attach it to the hook
+  (add-hook 'pdf-view-mode-hook #'my/pdf-view-setup)
+  (add-hook 'pdf-view-mode-hook #'auto-revert-mode))
+
 ;; 2. THE HARDENED CLEANSE
 (defun my/cleanse-interface-for-ia (&rest _args)
   "Ultra-stable cleanse: survives missing functions and high-speed switches."
@@ -827,6 +866,31 @@
 (global-set-key (kbd "<f9>") #'my/ia-toggle-theme)
 
 ;;; end iA Writer emulation
+
+(defun my/quarto-render-side-by-side ()
+  "Render QMD to PDF and show it on the right."
+  (interactive)
+  (let ((pdf-file (concat (file-name-sans-extension (buffer-file-name)) ".pdf")))
+    (save-buffer)
+    ;; Send command to vterm
+    (vterm-send-string (format "quarto render %s --to pdf" (buffer-file-name)))
+    (vterm-send-return)
+    (message "Quarto rendering...")
+    
+    ;; Wait for the file, then split the window and show it
+    (run-at-time "3.0 sec" nil
+                 (lambda (f)
+                   (when (file-exists-p f)
+                     (unless (get-buffer-window (find-file-noselect f))
+                       (delete-other-windows)
+                       (find-file-other-window f))
+                     (with-current-buffer (get-file-buffer f)
+                       (revert-buffer t t)
+                       (pdf-view-fit-page-to-window))))
+                 pdf-file)))
+
+;; Bind it to C-c C-p (Preview)
+(global-set-key (kbd "C-c C-p") #'my/quarto-render-side-by-side)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;
