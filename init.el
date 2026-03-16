@@ -695,7 +695,7 @@
     "Do initial window setup"
     (interactive)
 ;;    (setq initial-frame-alist
-;; '((top . 0) (left . 0) (height . 65) (width . 80)))
+;; '((top . 0) (left . 0) (height . 68) (width . 80)))
     (set-face-attribute 'default nil :font "IBM Plex Mono 14")
     ;; (org-agenda nil "z")
     )
@@ -711,13 +711,13 @@
   (use-package gruvbox-theme
     :straight t
     :config
-    (load-theme 'gruvbox-dark-soft t)
+    (load-theme 'gruvbox-light-soft t)
     )
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
 ;;    (setq initial-frame-alist
-;; '((top . 0) (left . 0) (height . 65) (width . 80)))
+;; '((top . 0) (left . 0) (height . 68) (width . 80)))
     (set-face-attribute 'default nil :font "IBM Plex Mono 14")
     ;; (org-agenda nil "z")
     )
@@ -739,7 +739,7 @@
     "Do initial window setup"
     (interactive)
      (setq initial-frame-alist
-     	'((top . 0) (left . 0) (height . 65) (width . 80)))
+     	'((top . 0) (left . 0) (height . 68) (width . 80)))
      (set-face-attribute 'default nil :font "Noto Mono 14")
      ;; (org-agenda nil "z")
     )
@@ -759,8 +759,6 @@
   (setq global-hl-line-mode nil)
   )
 
-(defvar my/ia-writer-colors-light '(:bg "#f5f5f5" :fg "#424242" :cursor "#007aff"))
-(defvar my/ia-writer-colors-dark  '(:bg "#111111" :fg "#e0e0e0" :cursor "#007aff"))
 
 (use-package olivetti
   :straight t
@@ -770,106 +768,121 @@
 ;;; iA Writer emulation
 
 
-;; --- 1. Variables & Palettes ---
-(defvar my/ia-writer-colors-light '(:bg "#f5f5f5" :fg "#424242" :cursor "#007aff"))
-(defvar my/ia-writer-colors-dark  '(:bg "#111111" :fg "#e0e0e0" :cursor "#007aff"))
+;; 1. COLORS
+(defvar my/ia-writer-colors-light '(:bg "#f5f5f5" :fg "#424242" :cursor "#007aff" :selection "#d0e8ff"))
+(defvar my/ia-writer-colors-dark  '(:bg "#111111" :fg "#e0e0e0" :cursor "#007aff" :selection "#103050"))
 (defvar my/ia-current-style 'dark)
 
-;; --- 2. The Core Aesthetic Function ---
+;; 2. THE HARDENED CLEANSE
+(defun my/cleanse-interface-for-ia (&rest _args)
+  "Ultra-stable cleanse: survives missing functions and high-speed switches."
+  (let* ((inhibit-message t)
+         (message-log-max nil)
+         (b-mode (if (and (boundp 'polymode-major-mode) polymode-major-mode) 
+                     polymode-major-mode 
+                   major-mode)))
+    
+    (when (memq b-mode '(markdown-mode gfm-mode org-mode poly-markdown-mode vterm-mode))
+      (let* ((palette (if (eq my/ia-current-style 'dark) my/ia-writer-colors-dark my/ia-writer-colors-light))
+             (bg (plist-get palette :bg))
+             (fg (plist-get palette :fg)))
+        
+        ;; A. STABILIZE MARGINS (Safe Method)
+        (ignore-errors
+          (when (bound-and-true-p olivetti-mode)
+	    (setq-local olivetti-body-width 68) ;; Lowered from 85 for a narrower column
+            (setq-local olivetti-color bg)
+            ;; If the specific margin func is missing, just refresh the mode
+            (if (fboundp 'olivetti-set-margins)
+                (olivetti-set-margins)
+              (olivetti-mode 1))))
 
+        ;; B. UI & POLYMODE SILENCE
+        (setq-local polymode-display-switch-messages nil)
+        (setq-local display-line-numbers nil)
+        (set-face-attribute 'fringe nil :background bg :foreground bg)
+        (set-face-attribute 'vertical-border nil :foreground bg :background bg)
+        
+        ;; C. THE 'BLEACH' (Monochrome & Fonts)
+        (ignore-errors
+          (when (facep 'poly-unfocused-chunk-face) (set-face-attribute 'poly-unfocused-chunk-face nil :background bg))
+          (when (facep 'poly-header-face) (set-face-attribute 'poly-header-face nil :background bg :underline nil))
+          
+          (let ((font (if (derived-mode-p 'org-mode) "iA Writer Mono V" "iA Writer Quattro V")))
+            (face-remap-add-relative 'default :family font :height 140))
+          
+          (dolist (face '(markdown-header-face-1 markdown-header-face-2 markdown-header-face-3 
+                          markdown-header-face-4 markdown-link-face font-lock-comment-face 
+                          font-lock-keyword-face font-lock-string-face font-lock-constant-face))
+            (face-remap-add-relative face :foreground fg :weight 'normal))
+          
+          (dolist (face '(markdown-blockquote-face org-quote org-block tex-math-face))
+            (face-remap-add-relative face :foreground fg :slant 'italic)))
+
+        ;; D. MODELINE PERSISTENCE (Independent block to prevent crashes)
+        (ignore-errors
+          (set-face-attribute 'mode-line nil :background bg :foreground fg :box nil)
+          (set-face-attribute 'mode-line-inactive nil :background bg :foreground fg :box nil)
+          (setq-local mode-line-format 
+                      '("%e" (:eval (propertize " " 'display `(space :align-to (- right 15))))
+                        (:eval (format "Words: %d" (count-words (point-min) (point-max)))))))
+        
+        (setq-local scroll-margin 99)))))
+
+;; 3. THE APPLY FUNCTION
 (defun my/apply-ia-style (palette)
-  "Sets the actual frame background to eliminate bars."
   (let ((bg (plist-get palette :bg))
         (fg (plist-get palette :fg))
-        (cursor (plist-get palette :cursor)))
-    
-    ;; 1. Set the actual frame background
-    ;; This eliminates the side bars by making the whole window one color
+        (cursor (plist-get palette :cursor))
+	(select (plist-get palette :selection)))
     (set-background-color bg)
     (set-foreground-color fg)
-    
-    ;; 2. The Layout (Centering)
-    (if (fboundp 'olivetti-mode)
-        (progn
-          (setq-local olivetti-body-width 85)
-          (setq-local olivetti-color bg)
-          (olivetti-mode 1)))
-    
-    ;; 3. Typography
-    (face-remap-add-relative 'default :family "iA Writer Quattro V" :height 140)
-    
-    ;; 4. UI Face Overrides (Fringe & Mode-line)
-    (set-face-attribute 'fringe nil :background bg :foreground bg)
-    (set-face-attribute 'mode-line nil :background bg :foreground fg :box nil)
-    (set-face-attribute 'mode-line-inactive nil :background bg :foreground fg :box nil)
-    ;; Fix the selection (region) color
-    (if (eq my/ia-current-style 'dark)
-        (face-remap-add-relative 'region :background "#333333" :foreground "#ffffff")
-      (face-remap-add-relative 'region :background "#d1e7fe" :foreground "#000000"))
-
-    ;; 5. The Content Cleanse
-    (dolist (face '(markdown-header-face-1 markdown-header-face-2 
-                    markdown-header-face-3 markdown-header-face-4 
-                    markdown-header-face-5 markdown-header-face-6
-                    markdown-link-face markdown-url-face 
-                    markdown-blockquote-face))
-      (face-remap-add-relative face :foreground fg :weight 'bold))
-
-    ;; 6. Word Count & Scrolling
-    (if (fboundp 'wc-mode) (wc-mode 1))
-    (setq-local mode-line-format 
-                '("%e" (:eval (propertize " " 'display `(space :align-to (- right 15))))
-                  (:eval (format "Words: %d" (count-words (point-min) (point-max))))))
-
-    (setq-local scroll-margin 99)
-    (setq-local maximum-scroll-margin 0.5)
     (set-cursor-color cursor)
-    (setq-local cursor-type 'bar)
-    (display-line-numbers-mode -1)
-    (recenter)))
+    (set-face-attribute 'region nil :background select :foreground 'unspecified)
+    (when (fboundp 'olivetti-mode)
+      (setq-local olivetti-body-width 68)
+      (olivetti-mode 1))
+    (my/cleanse-interface-for-ia)))
 
-;; --- 7. The Cleanup (Crucial!) ---
-;; This returns Emacs to Gruvbox when you leave Markdown mode
-;; (defun my/restore-global-theme ()
-;;   "Restores the global theme colors when leaving iA Writer mode."
-;;   (unless (derived-mode-p 'markdown-mode)
-;;     ;; Replace these with your actual Gruvbox hex codes if they don't restore
-;;     ;; usually (load-theme 'gruvbox-dark-soft t) works here
-;;     (set-face-attribute 'fringe nil :background nil :foreground nil)
-;;     (set-face-attribute 'mode-line nil :box t) ; Restore mode-line border
-;;     (message "Restored global theme")))
-
-;; (add-hook 'buffer-list-update-hook #'my/restore-global-theme)
-
-;; --- 3. Manual Toggle & Auto-Timer ---
-(defun my/set-ia-light () (interactive) (my/apply-ia-style my/ia-writer-colors-light))
-(defun my/set-ia-dark ()  (interactive) (my/apply-ia-style my/ia-writer-colors-dark))
-
-(defun my/toggle-ia-writer-style ()
-  "Toggle between iA Writer Light and Dark modes."
-  (interactive)
-  (if (eq my/ia-current-style 'dark)
-      (progn (my/set-ia-light) (setq my/ia-current-style 'light) (message "iA Writer: Day"))
-    (progn (my/set-ia-dark) (setq my/ia-current-style 'dark) (message "iA Writer: Night"))))
-
+;; 4. AUTOMATION & HOOKS
 (defun my/ia-auto-update-style ()
-  "Switch style based on time: Day (7am-7pm), Night (7pm-7am)."
   (let ((hour (string-to-number (format-time-string "%H"))))
-    (if (and (>= hour 7) (< hour 19))
-        (progn (my/set-ia-light) (setq my/ia-current-style 'light))
-      (progn (my/set-ia-dark) (setq my/ia-current-style 'dark)))))
+    (setq my/ia-current-style (if (and (>= hour 7) (< hour 19)) 'light 'dark))
+    (my/apply-ia-style (if (eq my/ia-current-style 'dark) my/ia-writer-colors-dark my/ia-writer-colors-light))))
 
-;; --- 4. Robust Activation ---
-(defun my/activate-ia-writer-setup ()
-  "Forces the iA Writer setup to run correctly after the buffer settles."
-  (run-with-idle-timer 0.1 nil #'my/ia-auto-update-style))
+(setq polymode-display-switch-messages nil)
 
-(add-hook 'markdown-mode-hook #'my/activate-ia-writer-setup)
-(run-with-timer 0 3600 #'my/ia-auto-update-style)
+(add-hook 'markdown-mode-hook #'my/ia-auto-update-style)
+(add-hook 'poly-markdown-mode-hook #'my/ia-auto-update-style)
+(add-hook 'org-mode-hook #'my/ia-auto-update-style)
 
-(with-eval-after-load 'markdown-mode
-  (define-key markdown-mode-map (kbd "<f9>") #'my/toggle-ia-writer-style))
+(add-hook 'vterm-mode-hook 
+          (lambda () 
+            ;; Give vterm a moment to 'settle' into a window before cleansing
+            (run-at-time "0.1 sec" nil (lambda () 
+                                         (with-current-buffer (current-buffer)
+                                           (my/ia-auto-update-style))))))
+
+;; Use the switch hooks with a safety wrapper
+(add-hook 'polymode-before-switch-buffer-hook (lambda (&rest _args) (ignore-errors (my/cleanse-interface-for-ia))))
+(add-hook 'polymode-after-switch-buffer-hook (lambda (&rest _args) (ignore-errors (my/cleanse-interface-for-ia))))
+
+(global-set-key (kbd "<f9>") (lambda () (interactive) 
+                               (setq my/ia-current-style (if (eq my/ia-current-style 'dark) 'light 'dark))
+                               (my/ia-auto-update-style)))
+
 ;;; end iA Writer emulation
+
+(defun my/theme-sentinel ()
+  "Detects if we are in a writer buffer. If not, restores Gruvbox."
+  (if (derived-mode-p 'markdown-mode 'org-mode 'vterm-mode)
+      (my/ia-auto-update-style) ;; Keep iA colors
+    ;; RESTORE GRUVBOX (Change this to your specific gruvbox theme name)
+    (set-face-attribute 'fringe nil :background nil :foreground nil)
+    (set-face-attribute 'vertical-border nil :foreground nil :background nil)
+    (set-face-attribute 'mode-line nil :box t)))
+
+(add-hook 'buffer-list-update-hook #'my/theme-sentinel)
 
 
 (defun transcript-polish ()
