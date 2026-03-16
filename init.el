@@ -293,17 +293,12 @@
 ;;         (ido-completing-read "Select directory: " my/deft-dir-list))
 ;;   (deft-refresh))
 ;; pdf utilites
-;; (use-package pdf-tools
-;;   :straight t
-;;   :hook (pdf-view-mode . (lambda () (display-line-numbers-mode 0)))
-;;   :config
-;;   (setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/zlib/1.3.1/lib/pkgconfig:/opt/homebrew/Cellar/poppler/24.12.0/lib/pkgconfig")
-;;   ;; (pdf-tools-install)
-;;   (setq default pdf-view-display-size 'fit-width)
-;;   (custom-set-variables '(pdf-tools-handle-upgrades t))
-;;   :custom
-;;   (pdf-annot-activate-created-annotations t "automatically annotate highlights")
-;;   )
+(use-package pdf-tools
+  :straight t
+  :config
+  (pdf-tools-install)
+  (setq-default pdf-view-display-size 'fit-page)
+  (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward))
 
 ;; magit
 (use-package magit
@@ -680,71 +675,6 @@
 ;;   )
 
 
-;;;;;;;;;;;;;;;;;;;;;;;
-;; startup by system ;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-(when (string= system-name "Erics-Mac-mini.local") 
-  (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 90)))
-  (use-package gruvbox-theme
-    :straight t
-    :config
-    (load-theme 'gruvbox-dark-soft t)
-    )
-    (defun my-setup-initial-window-setup()
-    "Do initial window setup"
-    (interactive)
-;;    (setq initial-frame-alist
-;; '((top . 0) (left . 0) (height . 68) (width . 80)))
-    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
-    ;; (org-agenda nil "z")
-    )
-  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-  (setq mac-command-modifier 'meta)
-  (setq mac-option-modifier nil)
-  (setq mac-control-modifier 'control)
-  (setq ispell-program-name "/opt/homebrew/bin/aspell")
-  )
-
-(when (string= system-name "Erics-Macbook-Air.local") 
-  (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
-  (use-package gruvbox-theme
-    :straight t
-    :config
-    (load-theme 'gruvbox-light-soft t)
-    )
-    (defun my-setup-initial-window-setup()
-    "Do initial window setup"
-    (interactive)
-;;    (setq initial-frame-alist
-;; '((top . 0) (left . 0) (height . 68) (width . 80)))
-    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
-    ;; (org-agenda nil "z")
-    )
-  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-  (setq mac-command-modifier 'meta)
-  (setq mac-option-modifier nil)
-  (setq mac-control-modifier 'control)
-  (setq ispell-program-name "/opt/homebrew/bin/aspell")
-  )
-
-
-(when (eq system-type 'gnu/linux)
-  (use-package gruvbox-theme
-   :straight t
-   :config
-   (load-theme 'gruvbox-dark-soft t))
-
-  (defun my-setup-initial-window-setup()
-    "Do initial window setup"
-    (interactive)
-     (setq initial-frame-alist
-     	'((top . 0) (left . 0) (height . 68) (width . 80)))
-     (set-face-attribute 'default nil :font "Noto Mono 14")
-     ;; (org-agenda nil "z")
-    )
-  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-  )
 
 (defun writing-mode ()
   (interactive)
@@ -845,10 +775,21 @@
     (my/cleanse-interface-for-ia)))
 
 ;; 4. AUTOMATION & HOOKS
+
 (defun my/ia-auto-update-style ()
-  (let ((hour (string-to-number (format-time-string "%H"))))
-    (setq my/ia-current-style (if (and (>= hour 7) (< hour 19)) 'light 'dark))
-    (my/apply-ia-style (if (eq my/ia-current-style 'dark) my/ia-writer-colors-dark my/ia-writer-colors-light))))
+  "Set theme based on machine name or time of day."
+  (let* ((hour (string-to-number (format-time-string "%H")))
+         (is-desktop (string= system-name "Erics-Mac-mini.local"))
+         ;; Logic: If it's the Mini, always dark. Otherwise, check the time.
+         (target-style (cond (is-desktop 'dark)
+                             ((and (>= hour 7) (< hour 19)) 'light)
+                             (t 'dark))))
+    
+    (setq my/ia-current-style target-style)
+    (my/apply-ia-style (if (eq my/ia-current-style 'dark) 
+                           my/ia-writer-colors-dark 
+                         my/ia-writer-colors-light))))
+
 
 (setq polymode-display-switch-messages nil)
 
@@ -871,7 +812,89 @@
                                (setq my/ia-current-style (if (eq my/ia-current-style 'dark) 'light 'dark))
                                (my/ia-auto-update-style)))
 
+(defun my/ia-toggle-theme ()
+  "Manually toggle between iA Light and iA Dark modes."
+  (interactive)
+  (if (eq my/ia-current-style 'dark)
+      (setq my/ia-current-style 'light)
+    (setq my/ia-current-style 'dark))
+  (my/apply-ia-style (if (eq my/ia-current-style 'dark) 
+                         my/ia-writer-colors-dark 
+                       my/ia-writer-colors-light))
+  (message "iA Writer Theme: %s" (symbol-name my/ia-current-style)))
+
+;; Bind it to F9
+(global-set-key (kbd "<f9>") #'my/ia-toggle-theme)
+
 ;;; end iA Writer emulation
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+;; startup by system ;;
+;;;;;;;;;;;;;;;;;;;;;;;
+
+(when (string= system-name "Erics-Mac-mini.local") 
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 90)))
+  (use-package gruvbox-theme
+    :straight t
+    :config
+    (load-theme 'gruvbox-dark-soft t)
+    )
+    (defun my-setup-initial-window-setup()
+    "Do initial window setup"
+    (interactive)
+;;    (setq initial-frame-alist
+;; '((top . 0) (left . 0) (height . 68) (width . 80)))
+    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
+    ;; (org-agenda nil "z")
+    )
+  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+  (setq mac-command-modifier 'meta)
+  (setq mac-option-modifier nil)
+  (setq mac-control-modifier 'control)
+  (setq ispell-program-name "/opt/homebrew/bin/aspell")
+  )
+
+(when (string= system-name "Erics-Macbook-Air.local") 
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
+  (use-package gruvbox-theme
+    :straight t
+    :config
+    (load-theme 'gruvbox-light-soft t)
+    )
+    (defun my-setup-initial-window-setup()
+    "Do initial window setup"
+    (interactive)
+;;    (setq initial-frame-alist
+;; '((top . 0) (left . 0) (height . 68) (width . 80)))
+    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
+    ;; (org-agenda nil "z")
+    )
+  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+  (setq mac-command-modifier 'meta)
+  (setq mac-option-modifier nil)
+  (setq mac-control-modifier 'control)
+  (setq ispell-program-name "/opt/homebrew/bin/aspell")
+  )
+
+
+(when (eq system-type 'gnu/linux)
+  (use-package gruvbox-theme
+   :straight t
+   :config
+   (load-theme 'gruvbox-dark-soft t))
+
+  (defun my-setup-initial-window-setup()
+    "Do initial window setup"
+    (interactive)
+     (setq initial-frame-alist
+     	'((top . 0) (left . 0) (height . 68) (width . 80)))
+     (set-face-attribute 'default nil :font "Noto Mono 14")
+     ;; (org-agenda nil "z")
+    )
+  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+  )
+
 
 (defun my/theme-sentinel ()
   "Detects if we are in a writer buffer. If not, restores Gruvbox."
@@ -906,6 +929,23 @@
       ;; 3. Clean up the wrapping
       (setq fill-column 80)
       (fill-region (point-min) (point-max)))))
+
+
+(setq initial-buffer-choice (lambda ()
+  (let ((buf (get-buffer-create "Draft.md")))
+    (with-current-buffer buf
+      ;; 1. Set the mode so our iA hooks fire
+      (markdown-mode)
+      
+      ;; 2. Force the style update
+      ;; We use a tiny delay so the window width is known for Olivetti
+      (run-at-time "0.1 sec" nil 
+                   (lambda (b) 
+                     (when (buffer-live-p b)
+                       (with-current-buffer b
+                         (my/ia-auto-update-style))))
+                   buf))
+    buf)))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
