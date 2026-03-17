@@ -27,7 +27,6 @@
 (straight-use-package 'use-package)
 (require 'use-package)
 
-
 ;;recent files 
 (use-package recentf
   :init
@@ -38,32 +37,6 @@
   (setq recentf-exclude (file-expand-wildcards (recentf-expand-file-name("~/Dropbox/org/roam/daily/*.org"))))
   )
 
-
-;; Undo
-(use-package undo-fu
-  :straight t)
-(use-package undo-fu-session
-  :straight t
-  :config
-  (setq undo-fu-session-incompatible-files '("/COMMIT_EDITMSG\\'" "/git-rebase-todo\\'"))
-  :init
-  (undo-fu-session-global-mode)
-  )
-
-
-
-
-;; Which key
-(use-package which-key
-  :straight t
-  :config
-  (which-key-mode)
-  (setq which-key-popup-type 'minibuffer
-	max-mini-window-height 0.5))
-
-;; use GNU coreutils version of ls, which cooperates better with dired
-(setq insert-directory-program "gls") 
-
 ;; kill ring and macOS clipboard
 (use-package xclip
   :straight t
@@ -71,26 +44,14 @@
   (xclip-mode 1)
   )
 
-;; attempts at speeding startup
-
-(setq gc-cons-threshold most-positive-fixnum)
-(add-hook 'emacs-startup-hook
-	  (lambda ()
-	    (setq gc-cons-threshold (expt 2 23))))
-
 ;;;;;;;;;;
 ;; keys ;;
 ;;;;;;;;;;
 
 (global-set-key [remap dabbrev-expand] 'hippie-expand)
 (keymap-global-set "C-<tab>" 'hippie-expand)
-(keymap-global-set "C-c f r" 'recentf-open)
-(keymap-global-set "C-c n d" 'deft)
-(keymap-global-set "C-c n a" 'org-agenda)
 (keymap-global-set "C-c C-x C-c" 'citar-insert-citation)
 (keymap-global-set "C-c l e b" 'eval-buffer)
-(keymap-global-set "C-c n r d t" 'org-roam-dailies-goto-today)
-(keymap-global-set "C-c n r d y" 'org-roam-dailies-goto-yesterday)
 (keymap-global-set "C-c o t" 'vterm-other-window)
 (keymap-global-set "C-x g" 'magit-status)
 (keymap-global-set "C-x C-r" 'recentf-open)
@@ -110,44 +71,13 @@
 (tool-bar-mode -1)
 (global-visual-line-mode 1)
 (set-fringe-mode 10)
-(global-display-line-numbers-mode t)
+
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
-(require 'battery)
-(use-package doom-modeline
-  :straight t
-  :init
-  (doom-modeline-mode 1)
-  (display-time-mode 1)
-  (when (and battery-status-function
-	     (not (string-match-p "N/A"
-				  (battery-format "%B"
-						  (funcall battery-status-function)))))
-    (display-battery-mode 1))
-  (setq doom-modeline-enable-word-count t
-	doom-modeline-continuous-word-count-modes '(org-mode markdown-mode)
-	doom-modeline-icon t
-	doom-modeline-buffer-encoding nil
-	doom-modeline-major-mode-color-icon t
-	doom-modeline-minor-modes nil
-	doom-modeline-check-icon t
-	doom-modeline-buffer-state-icon t
-	)
-  )
-
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; various necessities ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-;; diary
-(setq calendar-date-style 'iso)
-(setq diary-file "~/Dropbox/org/diary")
-(add-hook 'diary-list-entries-hook 'diary-sort-entries t)
 
 ;;completion
 (use-package company
@@ -239,7 +169,6 @@
   )
 
 ;; json
-
 (use-package json-mode
   :straight t
   )
@@ -260,48 +189,24 @@
       ido-everywhere t
       ido-file-extensions-order '(".org" ".qmd" ".docx")
       )
-(ido-mode 1)
+
 ;; spelling
 (with-eval-after-load 'flyspell
-
   (setq ispell-list-command "--list"
 	ispell-dictionary "en_US"))
 (use-package flyspell-correct-popup
   :straight t
   :after flyspell)  
+
 ;; snippets
 (use-package yasnippet
   :straight t
    )
-;; deft for org search
-;; (use-package deft
-;;   :straight t
-;;   :config
-;;   (setq deft-extensions '("org" "md" "qmd" "rmd"))
-;;   (setq deft-directory "~/Dropbox/org"
-;;         deft-recursive t
-;; 	deft-use-filename-as-title t)
-;;   )
-;; ;; a list of possible deft directories; https://www.reddit.com/r/emacs/comments/h0h4ix/how_to_configure_multile_directories_with_deft/
-;; (defvar my/deft-dir-list '()
-;;   "A list of deft directories to pick")
-
-;; (setq my/deft-dir-list '("~/Dropbox/org/"
-;;                          "~/Dropbox/writing_proj/"
-;;                          ))
-
-;; (defun my/pick-deft-dir ()
-;;   "Select directories from a list"
-;;   (interactive)
-;;   (setq deft-directory 
-;;         (ido-completing-read "Select directory: " my/deft-dir-list))
-;;   (deft-refresh))
 
 (with-demoted-errors "Path Error: %s"
   (straight-use-package 'exec-path-from-shell)
   (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize)))
-
 
 ;; magit
 (use-package magit
@@ -322,258 +227,20 @@
 ;; org ;;
 ;;;;;;;;;
 
-;; https://emacs.stackexchange.com/questions/64319/refile-to-non-agenda-files
-(defun org-candidate-files () (directory-files-recursively "~/Dropbox" "^[[:alnum::]].*\\.org\\'"))
-
 ;; org and others
 (use-package org
   :straight t (:type built-in)
   :hook (;;(org-mode . +org-enable-auto-reformat-tables-h)
 	 (org-mode . org-indent-mode)
 	 (org-mode . flyspell-mode))
-;;   :config
-;;   (setq org-directory "~/Dropbox/org"
-;; 	org-odt-preferred-output-format "docx"
-;;  	org-odt-styles-file "~/Dropbox/common/reference2.odt"
-;; 	org-odt-use-date-fields t
-;; 	;; org-odt-content-template-file "~/Dropbox/common/odt_content_test.xml"
-;; 	org-agenda-files (quote("~/Dropbox/org/roam/daily"
-;; 				"~/Dropbox/org/roam"))
-;; 	org-adapt-indentation t
-;; 	org-hide-leading-stars t
-;; 	org-refile-targets '((org-refile-candidates :maxlevel . 3))
-;; 	org-refile-use-outline-path t
-;; 	org-outline-path-complete-in-steps t
-;; 	org-todo-keywords (quote ((sequence "TODO(t)"
-;; 					    "PROJ(p)"
-;; 					    "LOOP(r)"
-;; 					    "STARTED(s)"
-;; 					    "WAIT(w)"
-;; 					    "HOLD(h)"
-;; 					    "IDEA(i)"
-;; 					    "|"
-;; 					    "DONE(d)"
-;; 					    "KILL(k)")
-;; 				  (sequence "[ ](T)"
-;; 					    "[-](S)"
-;; 					    "[?](W)"
-;; 					    "|"
-;; 					    "[X](D)")
-;; 				  (sequence "|"
-;; 					    "OKAY(o)"
-;; 					    "YES(y)"
-;; 					    "NO(n)")))
-;; 	org-todo-keyword-faces (quote(("TODO" . "#F89C74")
-;; 				      ("IDEA" . "#8BE0A4")
-;; 				      ("STARTED" . "#b5b991")
-;; 				      ("DONE" . "#3d5941")
-;; 				      ("PROJ" . "#A16928"))))
-   )
+  )
 
-;; (use-package org-roam
-;;   :straight t
-;;   :after org
-;;   :hook (org-roam-mode . visual-line-mode)
-;;   :config
-;;   (setq org-roam-directory "~/Dropbox/org/roam/"
-;; 	org-roam-index-file "~/Dropbox/org/roam/index.org"
-;; 	org-roam-dailies-directory "~/Dropbox/org/roam/daily/"
-;; 	org-roam-dailies-capture-templates '(("d" "default" entry
-;;          "* %?"
-;;          :target (file+head "%<%Y-%m-%d>-daily.org"
-;;                             "#+title: %<%Y-%m-%d>-daily.org\n"
-;;                             )))
-;; 	)
-;;   (org-roam-db-autosync-mode)
-;;   )
-;; (setq org-agenda-window-setup (quote current-window))
-;; (use-package org-super-agenda
-;;   :straight t
-;;   :after org
-;;   :init
-;;   (setq org-agenda-skip-scheduled-if-done t
-;;                     org-agenda-timegrid-use-ampm t
-;;                     org-agenda-skip-deadline-if-done t
-;; 		    org-agenda-skip-scheduled-if-deadline-is-shown t
-;; 		    org-agenda-skip-deadline-prewarning-if-scheduled t
-;; 		    org-agenda-skip-timestamp-if-done t
-;;                     org-agenda-include-diary t
-;;                     org-agenda-include-deadlines t
-;;                     org-deadline-warning-days 45
-;;                     org-agenda-todo-ignore-deadlines (quote far)
-;;                     org-agenda-todo-ignore-scheduled (quote far)
-;;                     org-agenda-compact-blocks t
-;; 		    org-agenda-start-day nil
-;;                     org-agenda-start-with-log-mode t
-;;                     org-agenda-span 10
-;;                     ;; org-agenda-view-columns-initially t
-;;                     org-columns-default-format "%TODO %25Item %14Deadline %Clocksum_t"
-;;                     org-agenda-start-on-weekday nil
-;;                     org-agenda-prefix-format '(
-;;                                                (agenda . " %s %t ")
-;;                                                (timeline . " - ")
-;;                                                (todo . "  %(let ((scheduled (org-get-scheduled-time (point)))) (if scheduled (format-time-string \"%Y-%m-%d %I:%M %p\" scheduled) \"\")) ")
-;;                                                (tags . " %s %t ")
-;;                                                (search . " - ")))
-;; ;; borrowed from Https://www.rousette.org.uk/archives/doom-emacs-tweaks-org-journal-and-org-super-agenda/
-;;               (setq org-agenda-custom-commands
-;;                     '(("z" "Super view"
-;;                        (
-;;                         (agenda "" ((org-agenda-overriding-header "")
-;;                                     (org-super-agenda-groups
-;;                                      '(
-;;                                        (:name ""
-;;                                         :time-grid t
-;;                                         :log t
-;;                                         :date today
-;;                                         :order 1
-;; 					;; :discard (:not (:todo "TODO")))
-;;                                         :discard (:anything))
-;;                                        ))))
-;;                         (alltodo "" ((org-agenda-overriding-header "")
-;;                                      (org-super-agenda-groups
-;;                                       '(
-;;                                          (:name "Due today"
-;;                                                 :deadline today
-;;                                                 :order 1)
-;;                                         (:name "Due soon"
-;;                                                :deadline future
-;;                                                :scheduled future
-;;                                                :order 0)
-;;                                         (:name "Overdue"
-;;                                                :deadline past
-;;                                                :order 7)
-;;                                         (:name "Soonest"
-;;                                                :priority "A"
-;;                                         )
-;;                                         (:name "Secondary"
-;;                                                :priority "B"
-;;                                         )
-;;                                         (:name "Someday"
-;;                                                :priority "C"
-;;                                         )
-;;                                         ;;(:auto-group t)
-;;                                         ;;(:auto-priority t)
-;; 					;; (:discard (:anything))
-;; 					(:discard (:not (:todo "TODO")))
-;;                                         ))))))))
-;;               :config
-;;               (org-super-agenda-mode)
-;; 	      )
-
-
-
-;; ;; org-noter
-;; ;;(use-package org-noter
-;; ;;  :straight t
-;; ;;  :after pdf-tools
-;; ;;  :config
-;; ;;  (setq org-noter-notes-search-path '("~/Dropbox/org/roam/")
-;; ;;	org-noter-hide-other nil
-;; ;;	org-noter-separate-notes-from-heading t
-;; ;;	org-noter-always-create-frame nil
-;; ;;	org-noter-auto-save-last-location t)
-;; ;;  )
-;; ;; org exporters
-;; (require 'ox)
-;; (defun sa-ignore-headline (contents backend info)
-;;   "Ignore headlines with tag `ignoreheading'."
-;;   (when (and (org-export-derived-backend-p backend 'latex 'odt 'pandoc 'docx)
-;;           (string-match "\\`.*ignoreheading.*\n"
-;;                 (downcase contents)))
-;;     (replace-match "" nil nil contents)
-;;     )
-;;   )
-;;   (add-to-list 'org-export-filter-headline-functions 'sa-ignore-headline)
-;;   ;; turns off tags for export to reveal, so "ignoreheading" doesn't appear there
-;;   (defun turn-off-tags
-;;     (orig &optional async subtreep visible-only body-only ext-plist)
-;;   (let ((org-export-with-tags nil))
-;;     (funcall orig async subtreep visible-only body-only ext-plist)))
-;;   ;; tell org export to delete, among other temporary tex files, those marked bbl and tex
-;;   (add-to-list 'org-latex-logfiles-extensions "bbl")
-;;   (add-to-list 'org-latex-logfiles-extensions "tex")
-;; ;; for ox-latex
-;; (with-eval-after-load 'ox-latex
-;; (add-to-list 'org-latex-classes
-;;              '("tufte-handout"
-;;                "\\documentclass[nobib]{tufte-handout}"
-;;                ("\\section{%s}" . "\\section*{%s}")
-;;                ("\\subsection{%s}" . "\\subsection*{%s}")
-;;                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-;;                ("\\paragraph{%s}" . "\\paragraph*{%s}")
-;;                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-;; (add-to-list 'org-latex-classes
-;;                 '("letter"
-;;                   "\\documentclass{letter}"
-;;                   ("\\section{%s}" . "\\section*{%s}")
-;;                   ("\\subsection{%s}" . "\\subsection*{%s}")
-;;                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-;; (add-to-list 'org-latex-classes
-;;              '("koma-letter"
-;;                "\\documentclass{scrlttr2}"))
-;; (add-to-list 'org-latex-classes
-;;                 '("uc-own"
-;;                   "\\documentclass{uc-own}"
-;;                   ("\\section{%s}" . "\\section*{%s}")
-;;                   ("\\subsection{%s}" . "\\subsection*{%s}")
-;;                   ("\\subsubsection{%s}" . "\\subsubsection*{%s}")))
-;; (add-to-list 'org-latex-classes
-;;              '("koma-article"
-;;                "\\documentclass{scrartcl}"
-;;                ("\\section{%s}" . "\\section*{%s}")
-;;                ("\\subsection{%s}" . "\\subsection*{%s}")
-;;                ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-;;                ("\\paragraph{%s}" . "\\paragraph*{%s}")
-;;                ("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-;; )
-;; ;; for reveal presentations
-;; ;; (use-package ox-reveal
-;; ;;   :straight t
-
-;; ;;   )
-;; (use-package org-re-reveal
-;;   :straight t
-;;   :config
-;;   (setq org-re-reveal-root "~/Dropbox/common/reveal.js")
-;;   )
-
-
-;; (require 'ox-odt)
-;; ;; (use-package ox-odt
-;; ;; ;;  see https://github.com/kjambunathan/org-mode-ox-odt/tree/master
-;; ;;   :straight (org-mode-ox-odt
-;; ;; 	     :host github
-;; ;; 	     :repo "kjambunathan/org-mode-ox-odt"
-;; ;; 	     :files ("lisp/ox-odt.el"
-;; ;; 		     "lisp/odt.el"
-;; ;; 		     "etc"
-;; ;; 		     "docs"
-;; ;; 		     "contrib/odt/LibreOffice"))
-;; ;;   :init (add-to-list 'org-odt-convert-processes '("unoconv" "unoconv -f doc -o \"%o\" \"%i\""))
-;; ;;   )
-
-
-;; (use-package ox-pandoc
-;;   :straight (ox-pandoc
-;; 	     :host github
-;; 	     :repo "emacsorphanage/ox-pandoc"
-;; 	     :files ("ox-pandoc.el"))
-;;   :config (add-to-list 'org-pandoc-valid-options 'from)
-;;   )  
-;; (with-eval-after-load "org"
-;;   (define-key org-mode-map (kbd "C-c C-x C-c") #'citar-insert-citation)
-;;   )
 ;; on getting unoconv / soffice to work on Mac https://gist.github.com/pankaj28843/3ad78df6290b5ba931c1
 (use-package emacsql
   :straight t
   :defer nil
   )
-;; (use-package emacsql-sqlite
-;;   :after emacsql
-;;  :straight t
-;;  :defer nil
-;;  )
+
 ;; citations
 (use-package citar
   :straight t
@@ -651,32 +318,7 @@
 ;; quarto essentials
 (use-package quarto-mode
   :straight t
-  ;;:mode (("\\.rmd" . poly-quarto-mode))
-  ;;:mode (("\\.qmd" . poly-quarto-mode))
-  )
-;; doom cribs
-;; (defun +org-realign-table-maybe-h ()
-;;   "Auto-align table under cursor."
-;;   (when (and org-table-automatic-realign (org-at-table-p) org-table-may-need-update)
-;;     (let ((pt (point))
-;;           (inhibit-message t))
-;;       (if org-table-may-need-update (org-table-align))
-;;       (goto-char pt)))
-;;   )
-;; (defun +org-enable-auto-reformat-tables-h ()
-;;   "Realign tables & update formulas when exiting insert mode (`evil-mode').
-;; Meant for `org-mode-hook'."
-;;   (when (featurep 'evil)
-;;     (add-hook 'evil-insert-state-exit-hook #'+org-realign-table-maybe-h nil t)
-;;     (add-hook 'evil-replace-state-exit-hook #'+org-realign-table-maybe-h nil t)
-;;     (advice-add #'evil-replace :after #'+org-realign-table-maybe-a))
-;;   )
-;; (defun +org-realign-table-maybe-a (&rest _)
-;;   "Auto-align table under cursor and re-calculate formulas."
-;;   (when (eq major-mode 'org-mode)
-;;     (+org-realign-table-maybe-h))
-;;   )
-
+   )
 
 
 (defun writing-mode ()
@@ -739,7 +381,7 @@
 
   ;; 2. Create a function to apply the style safely
   (defun my/pdf-view-setup ()
-    (pdf-view-midnight-minor-mode 1)
+    (pdf-view-midnight-minor-mode -1)
     (pdf-view-fit-page-to-window))
 
   ;; 3. Attach it to the hook
@@ -885,7 +527,7 @@
     (save-buffer)
 
     ;; 1. Layout: Expand for MacBook M4
-    (set-frame-parameter nil 'width 190)
+    (set-frame-parameter nil 'width 180)
     (set-window-margins nil 10 10)
 
     ;; 2. Start Process
@@ -906,8 +548,8 @@
           (message "Preview Linked."))
       (message "First build started. Wait 5s and hit C-c P again."))))
 
-;; Bind to a CLEAN key to avoid the 'C-c C-p' stall
-(global-set-key (kbd "C-c P") #'my/quarto-smart-preview)
+
+(global-set-key (kbd "C-c p") #'my/quarto-smart-preview)
 
 (setq pdf-view-midnight-colors 
       (cons (plist-get my/ia-writer-colors-dark :fg)
@@ -920,11 +562,6 @@
 
 (when (string= system-name "Erics-Mac-mini.local") 
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 90)))
-  (use-package gruvbox-theme
-    :straight t
-    :config
-    (load-theme 'gruvbox-dark-soft t)
-    )
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
@@ -942,18 +579,10 @@
 
 (when (string= system-name "Erics-Macbook-Air.local") 
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
-  (use-package gruvbox-theme
-    :straight t
-    :config
-    (load-theme 'gruvbox-light-soft t)
-    )
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
-;;    (setq initial-frame-alist
-;; '((top . 0) (left . 0) (height . 68) (width . 80)))
     (set-face-attribute 'default nil :font "IBM Plex Mono 14")
-    ;; (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   (setq mac-command-modifier 'meta)
@@ -961,7 +590,6 @@
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
   )
-
 
 (when (eq system-type 'gnu/linux)
   (use-package gruvbox-theme
