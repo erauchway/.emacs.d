@@ -1,11 +1,13 @@
 ;; attempt to setup plain vanilla emacs to my liking
 ;; borrowing some material from Wouter Spekkink https://github.com/WouterSpekkink/dotfiles/blob/master/emacs/init.el
 
-
-
 ;;;;;;;;;;;;;;;;;;;; 
-;; packages, etc. ;;
+;; packges, etc.  ;;
 ;;;;;;;;;;;;;;;;;;;;
+
+;; (when (memq window-system '(mac ns))
+;;  (exec-path-from-shell-initialize))
+;; (setenv "PKG_CONFIG_PATH" "/opt/homebrew/Cellar/pkg-config")
 
 
 ;; Straight package management
@@ -49,10 +51,6 @@
   :init
   (undo-fu-session-global-mode)
   )
-
-
-
-
 ;; Which key
 (use-package which-key
   :straight t
@@ -60,10 +58,8 @@
   (which-key-mode)
   (setq which-key-popup-type 'minibuffer
 	max-mini-window-height 0.5))
-
 ;; use GNU coreutils version of ls, which cooperates better with dired
 (setq insert-directory-program "gls") 
-
 ;; kill ring and macOS clipboard
 (use-package xclip
   :straight t
@@ -871,47 +867,30 @@
 
 ;;; end iA Writer emulation
 
-;; --- QUARTO CONFIGURATION ---
-(defun my/quarto-smart-preview ()
-  "Start Quarto, widen frame, and link PDF."
+(defun my/quarto-render-side-by-side ()
+  "Render QMD to PDF and show it on the right."
   (interactive)
-  (let* ((f (buffer-file-name))
-         (base-name (and f (file-name-sans-extension (file-name-nondirectory f))))
-         (current-year (format-time-string "%Y"))
-         (out-dir (expand-file-name (format "~/Documents/_outputs/%s/" current-year)))
-         (pdf-path (concat out-dir base-name ".pdf")))
-
-    (unless f (user-error "Not visiting a file"))
+  (let ((pdf-file (concat (file-name-sans-extension (buffer-file-name)) ".pdf")))
     (save-buffer)
+    ;; Send command to vterm
+    (vterm-send-string (format "quarto preview %s --to pdf" (buffer-file-name)))
+    (vterm-send-return)
+    (message "Quarto rendering...")
+    
+    ;; Wait for the file, then split the window and show it
+    (run-at-time "3.0 sec" nil
+                 (lambda (f)
+                   (when (file-exists-p f)
+                     (unless (get-buffer-window (find-file-noselect f))
+                       (delete-other-windows)
+                       (find-file-other-window f))
+                     (with-current-buffer (get-file-buffer f)
+                       (revert-buffer t t)
+                       (pdf-view-fit-page-to-window))))
+                 pdf-file)))
 
-    ;; 1. Layout: Expand for MacBook M4
-    (set-frame-parameter nil 'width 190)
-    (set-window-margins nil 10 10)
-
-    ;; 2. Start Process
-    (unless (get-process "quarto-preview-process")
-      (start-process "quarto-preview-process" nil "quarto" "preview" f "--to" "pdf" "--no-browser"))
-
-    ;; 3. Attempt PDF Link
-    (if (file-exists-p pdf-path)
-        (let ((pdf-buf (find-file-noselect pdf-path t)))
-          (delete-other-windows)
-          (split-window-right)
-          (with-selected-window (window-in-direction 'right)
-            (switch-to-buffer pdf-buf)
-            (pdf-view-mode)
-            (auto-revert-mode 1)
-            (pdf-view-fit-page-to-window))
-          (select-window (window-in-direction 'left))
-          (message "Preview Linked."))
-      (message "First build started. Wait 5s and hit C-c P again."))))
-
-;; Bind to a CLEAN key to avoid the 'C-c C-p' stall
-(global-set-key (kbd "C-c P") #'my/quarto-smart-preview)
-
-(setq pdf-view-midnight-colors 
-      (cons (plist-get my/ia-writer-colors-dark :fg)
-            (plist-get my/ia-writer-colors-dark :bg)))
+;; Bind it to C-c C-p (Preview)
+(global-set-key (kbd "C-c C-p") #'my/quarto-render-side-by-side)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -1031,10 +1010,6 @@
                          (my/ia-auto-update-style))))
                    buf))
     buf)))
-
-(with-eval-after-load 'polymode
-  (define-key quarto-mode-map (kbd "C-c C-p") #'my/quarto-smart-preview)
-  (define-key markdown-mode-map (kbd "C-c C-p") #'my/quarto-smart-preview))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
