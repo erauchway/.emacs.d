@@ -1,0 +1,230 @@
+;; writer aspects
+
+;;; iA Writer emulation
+;;; while I own iA for several platforms it doesn't handle files the way I'd like
+;;; and of course doesn't run on Linux
+
+;; 1. COLORS
+(defvar my/ia-writer-colors-light '(:bg "#f5f5f5" :fg "#424242" :cursor "#007aff" :selection "#d0e8ff"))
+(defvar my/ia-writer-colors-dark  '(:bg "#111111" :fg "#e0e0e0" :cursor "#007aff" :selection "#103050"))
+(defvar my/ia-current-style 'dark)
+
+
+
+;; 3. Remove all hooks for now to ensure a "plain" success first
+(with-eval-after-load 'pdf-view
+  ;; 1. Define the colors from your iA theme
+  (setq pdf-view-midnight-colors 
+        (cons (plist-get my/ia-writer-colors-dark :fg)
+              (plist-get my/ia-writer-colors-dark :bg)))
+
+  ;; 2. Create a function to apply the style safely
+  (defun my/pdf-view-setup ()
+    (pdf-view-midnight-minor-mode -1)
+    (pdf-view-fit-page-to-window))
+
+  ;; 3. Attach it to the hook
+  (add-hook 'pdf-view-mode-hook #'my/pdf-view-setup)
+  (add-hook 'pdf-view-mode-hook #'auto-revert-mode))
+
+;; 2. THE HARDENED CLEANSE
+(defun my/cleanse-interface-for-ia (&rest _args)
+  "Ultra-stable cleanse: survives missing functions and high-speed switches."
+  (let* ((inhibit-message t)
+         (message-log-max nil)
+         (b-mode (if (and (boundp 'polymode-major-mode) polymode-major-mode) 
+                     polymode-major-mode 
+                   major-mode)))
+    
+    (when (memq b-mode '(markdown-mode gfm-mode org-mode poly-markdown-mode vterm-mode))
+      (let* ((palette (if (eq my/ia-current-style 'dark) my/ia-writer-colors-dark my/ia-writer-colors-light))
+             (bg (plist-get palette :bg))
+             (fg (plist-get palette :fg)))
+        
+        ;; A. STABILIZE MARGINS (Safe Method)
+        (ignore-errors
+          (when (bound-and-true-p olivetti-mode)
+	    (setq-local olivetti-body-width 68) ;; Lowered from 85 for a narrower column
+            (setq-local olivetti-color bg)
+            ;; If the specific margin func is missing, just refresh the mode
+            (if (fboundp 'olivetti-set-margins)
+                (olivetti-set-margins)
+              (olivetti-mode 1))))
+
+        ;; B. UI & POLYMODE SILENCE
+        (setq-local polymode-display-switch-messages nil)
+        (setq-local display-line-numbers nil)
+        (set-face-attribute 'fringe nil :background bg :foreground bg)
+        (set-face-attribute 'vertical-border nil :foreground bg :background bg)
+        
+        ;; C. THE 'BLEACH' (Monochrome & Fonts)
+        (ignore-errors
+          (when (facep 'poly-unfocused-chunk-face) (set-face-attribute 'poly-unfocused-chunk-face nil :background bg))
+          (when (facep 'poly-header-face) (set-face-attribute 'poly-header-face nil :background bg :underline nil))
+          
+          (let ((font (if (derived-mode-p 'org-mode) "Noto Sans Mono" "Noto Sans")))
+            (face-remap-add-relative 'default :family font :height 140))
+          
+          (dolist (face '(markdown-link-face font-lock-comment-face 
+                          font-lock-keyword-face font-lock-string-face font-lock-constant-face))
+            (face-remap-add-relative face :foreground fg :weight 'normal))
+
+	  (dolist (face '(markdown-header-face-1 markdown-header-face-2 markdown-header-face-3 
+						 markdown-header-face-4))
+	    (face-remap-add-relative face :foreground fg :weight 'bold))
+          
+          (dolist (face '(markdown-blockquote-face org-quote org-block tex-math-face))
+            (face-remap-add-relative face :foreground fg :slant 'italic)))
+
+        ;; D. MODELINE PERSISTENCE (Independent block to prevent crashes)
+        (ignore-errors
+          (set-face-attribute 'mode-line nil :background bg :foreground fg :box nil)
+          (set-face-attribute 'mode-line-inactive nil :background bg :foreground fg :box nil)
+          (setq-local mode-line-format 
+                      '("%e" (:eval (propertize " " 'display `(space :align-to (- right 15))))
+                        (:eval (format "Words: %d" (count-words (point-min) (point-max)))))))
+        
+        (setq-local scroll-margin 99)))))
+
+;; 3. THE APPLY FUNCTION
+(defun my/apply-ia-style (palette)
+  (let ((bg (plist-get palette :bg))
+        (fg (plist-get palette :fg))
+        (cursor (plist-get palette :cursor))
+	(select (plist-get palette :selection)))
+    (set-background-color bg)
+    (set-foreground-color fg)
+    (set-cursor-color cursor)
+    (set-face-attribute 'region nil :background select :foreground 'unspecified)
+    (when (fboundp 'olivetti-mode)
+      (setq-local olivetti-body-width 68)
+      (olivetti-mode 1))
+    (my/cleanse-interface-for-ia)))
+
+;; 4. AUTOMATION & HOOKS
+
+(defun my/ia-auto-update-style ()
+  "Set theme based on machine name or time of day."
+  (let* ((hour (string-to-number (format-time-string "%H")))
+         (is-desktop (string= system-name "Erics-Mac-mini.local"))
+         ;; Logic: If it's the Mini, always dark. Otherwise, check the time.
+         (target-style (cond (is-desktop 'dark)
+                             ((and (>= hour 7) (< hour 19)) 'light)
+                             (t 'dark))))
+    
+    (setq my/ia-current-style target-style)
+    (my/apply-ia-style (if (eq my/ia-current-style 'dark) 
+                           my/ia-writer-colors-dark 
+                         my/ia-writer-colors-light))))
+
+
+(setq polymode-display-switch-messages nil)
+
+(add-hook 'markdown-mode-hook #'my/ia-auto-update-style)
+(add-hook 'poly-markdown-mode-hook #'my/ia-auto-update-style)
+(add-hook 'org-mode-hook #'my/ia-auto-update-style)
+
+(add-hook 'vterm-mode-hook 
+          (lambda () 
+            ;; Give vterm a moment to 'settle' into a window before cleansing
+            (run-at-time "0.1 sec" nil (lambda () 
+                                         (with-current-buffer (current-buffer)
+                                           (my/ia-auto-update-style))))))
+
+;; Use the switch hooks with a safety wrapper
+(add-hook 'polymode-before-switch-buffer-hook (lambda (&rest _args) (ignore-errors (my/cleanse-interface-for-ia))))
+(add-hook 'polymode-after-switch-buffer-hook (lambda (&rest _args) (ignore-errors (my/cleanse-interface-for-ia))))
+
+(global-set-key (kbd "<f9>") (lambda () (interactive) 
+                               (setq my/ia-current-style (if (eq my/ia-current-style 'dark) 'light 'dark))
+                               (my/ia-auto-update-style)))
+
+(defun my/ia-toggle-theme ()
+  "Manually toggle between iA Light and iA Dark modes."
+  (interactive)
+  (if (eq my/ia-current-style 'dark)
+      (setq my/ia-current-style 'light)
+    (setq my/ia-current-style 'dark))
+  (my/apply-ia-style (if (eq my/ia-current-style 'dark) 
+                         my/ia-writer-colors-dark 
+                       my/ia-writer-colors-light))
+  (message "iA Writer Theme: %s" (symbol-name my/ia-current-style)))
+
+;; Bind it to F9
+(global-set-key (kbd "<f9>") #'my/ia-toggle-theme)
+
+;;; end iA Writer emulation
+
+;; --- QUARTO CONFIGURATION ---
+(defun my/quarto-smart-preview ()
+  "Start Quarto, widen frame, and link PDF."
+  (interactive)
+  (let* ((f (buffer-file-name))
+         (base-name (and f (file-name-sans-extension (file-name-nondirectory f))))
+         (current-year (format-time-string "%Y"))
+         (out-dir (expand-file-name (format "~/Documents/_outputs/%s/" current-year)))
+         (pdf-path (concat out-dir base-name ".pdf")))
+
+    (unless f (user-error "Not visiting a file"))
+    (save-buffer)
+
+    ;; 1. Layout: Expand for MacBook M4
+    (set-frame-parameter nil 'width 180)
+    (set-window-margins nil 10 10)
+
+    ;; 2. Start Process
+    (unless (get-process "quarto-preview-process")
+      (start-process "quarto-preview-process" nil "quarto" "preview" f "--to" "pdf" "--no-browser"))
+
+    ;; 3. Attempt PDF Link
+    (if (file-exists-p pdf-path)
+        (let ((pdf-buf (find-file-noselect pdf-path t)))
+          (delete-other-windows)
+          (split-window-right)
+          (with-selected-window (window-in-direction 'right)
+            (switch-to-buffer pdf-buf)
+            (pdf-view-mode)
+            (auto-revert-mode 1)
+            (pdf-view-fit-page-to-window))
+          (select-window (window-in-direction 'left))
+          (message "Preview Linked."))
+      (message "First build started. Wait 5s and hit C-c P again."))))
+
+
+(global-set-key (kbd "C-c p") #'my/quarto-smart-preview)
+
+(setq pdf-view-midnight-colors 
+      (cons (plist-get my/ia-writer-colors-dark :fg)
+            (plist-get my/ia-writer-colors-dark :bg)))
+
+(defun my/theme-sentinel ()
+  "Detects if we are in a writer buffer. If not, restores Gruvbox."
+  (if (derived-mode-p 'markdown-mode 'org-mode 'vterm-mode)
+      (my/ia-auto-update-style) ;; Keep iA colors
+    ;; RESTORE GRUVBOX (Change this to your specific gruvbox theme name)
+    (set-face-attribute 'fringe nil :background nil :foreground nil)
+    (set-face-attribute 'vertical-border nil :foreground nil :background nil)
+    (set-face-attribute 'mode-line nil :box t)))
+
+(add-hook 'buffer-list-update-hook #'my/theme-sentinel)
+
+(setq initial-buffer-choice (lambda ()
+  (let ((buf (get-buffer-create "Draft.md")))
+    (with-current-buffer buf
+      ;; 1. Set the mode so our iA hooks fire
+      (markdown-mode)
+      
+      ;; 2. Force the style update
+      ;; We use a tiny delay so the window width is known for Olivetti
+      (run-at-time "0.1 sec" nil 
+                   (lambda (b) 
+                     (when (buffer-live-p b)
+                       (with-current-buffer b
+                         (my/ia-auto-update-style))))
+                   buf))
+    buf)))
+
+(with-eval-after-load 'polymode
+  (define-key quarto-mode-map (kbd "C-c C-p") #'my/quarto-smart-preview)
+  (define-key markdown-mode-map (kbd "C-c C-p") #'my/quarto-smart-preview)
+  )

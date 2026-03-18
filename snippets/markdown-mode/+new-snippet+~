@@ -1,0 +1,20 @@
+# -*- mode: snippet -*-
+# name:slide_image_ok 
+# key: sok
+# --
+
+## ${1:Title}
+
+:::{.v-center-container}
+![](../media/${0})
+
+:::
+
+:::{.content-hidden when-format="html" unless-format="revealjs"}
+
+:::{.notes}
+
+
+:::
+:::
+

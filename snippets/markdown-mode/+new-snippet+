@@ -1,0 +1,18 @@
+# key: sok
+# name: slide_image_ok
+# --
+## ${1:Title}
+
+:::{.v-center-container .wide-image}
+![](../media/${0})
+
+:::
+
+:::{.content-hidden when-format="html" unless-format="revealjs"}
+
+:::{.notes}
+
+
+:::
+:::
+
