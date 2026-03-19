@@ -1,11 +1,11 @@
 # -*- mode: snippet -*-
-# name: slide_wide
-# key: sw
+# name: slide_list
+# key: sl
 # --
 ## ${1:Title}
 
-:::{.v-center-container .wide-image}
-![](../media/${0:image}
+:::{.v-center-container}
+- $0
 
 :::
 
@@ -16,4 +16,3 @@
 
 :::
 :::
-

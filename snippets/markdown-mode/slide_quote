@@ -1,19 +1,23 @@
 # -*- mode: snippet -*-
-# name: slide_wide
-# key: sw
+# name: slide_quote
+# key: sm
 # --
 ## ${1:Title}
 
-:::{.v-center-container .wide-image}
-![](../media/${0:image}
 
+::::{.callout-tip appearance=minimal .v-center-container}
+${2:Quote}
+
+:::{.flushright}
+$0
 :::
+
+::::
 
 :::{.content-hidden when-format="html" unless-format="revealjs"}
 
 :::{.notes}
 
-
-:::
 :::
 
+:::

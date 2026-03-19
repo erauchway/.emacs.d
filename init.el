@@ -63,18 +63,7 @@
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
 
-;; base theme by time of day
-(setq calendar-latitude 38.5)
-(setq calendar-longitude -121.7)
 
-(use-package circadian
-  :straight t
-  :after solar
-  :config
-  (setq circadian-themes '((:sunrise . modus-operandi-tinted)
-			   (:sunset . modus-vivendi)))
-  (circadian-setup)
-  )
 
 (defun toggle-light-dark-theme ()
   (interactive)
@@ -398,14 +387,13 @@
 ;; startup by system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-(when (string= system-name "Erics-Mac-mini.local") 
-  (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 90)))
+(when (string= system-name "Erics-Mac-mini.local")
+  (load-theme 'modus-vivendi)
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 130)))
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
-;;    (setq initial-frame-alist
-;; '((top . 0) (left . 0) (height . 68) (width . 80)))
-    (set-face-attribute 'default nil :font "IBM Plex Mono 14")
+    (set-face-attribute 'default nil :font "Noto Sans Mono 14")
     ;; (org-agenda nil "z")
     )
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
@@ -413,9 +401,22 @@
   (setq mac-option-modifier nil)
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
+  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160)
   )
 
-(when (string= system-name "Erics-Macbook-Air.local") 
+(when (string= system-name "Erics-Macbook-Air.local")
+  ;; base theme by time of day
+  (setq calendar-latitude 38.5)
+  (setq calendar-longitude -121.7)
+
+  (use-package circadian
+    :straight t
+    :after solar
+    :config
+    (setq circadian-themes '((:sunrise . modus-operandi-tinted)
+			     (:sunset . modus-vivendi)))
+    (circadian-setup)
+    )
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
@@ -427,6 +428,7 @@
   (setq mac-option-modifier nil)
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
+  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 140)
   )
 
 (when (eq system-type 'gnu/linux)
@@ -490,5 +492,5 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(variable-pitch ((t (:family "Noto Sans" :height 140))))
+
  )

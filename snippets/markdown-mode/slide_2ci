@@ -1,0 +1,25 @@
+# -*- mode: snippet -*-
+# name: slide_2ci
+# key: s2ci
+# --
+---
+
+:::{.columns .solo-container}
+
+::::{.column width=40%}
+:::::{.column-header}
+${1:Title}
+:::::
+::::
+
+::::{.column width=60%}
+![](../media/$0)
+::::
+:::
+
+:::{.content-hidden when-format="html" unless-format="revealjs"}
+
+:::{.notes}
+
+:::
+:::

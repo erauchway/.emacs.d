@@ -1,13 +1,9 @@
 # -*- mode: snippet -*-
-# name: slide_wide
-# key: sw
+# name: slide_title
+# key: st
 # --
-## ${1:Title}
+## $0{.title-slide}
 
-:::{.v-center-container .wide-image}
-![](../media/${0:image}
-
-:::
 
 :::{.content-hidden when-format="html" unless-format="revealjs"}
 
@@ -16,4 +12,3 @@
 
 :::
 :::
-

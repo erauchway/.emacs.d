@@ -1,0 +1,25 @@
+# -*- mode: snippet -*-
+# name: slide_mov
+# key: sm
+# --
+## ${1:Title}
+
+:::{.content-hidden unless-format="revealjs"}
+
+:::{.v-center-container}
+	```{=revealjs}
+	<video>
+ 	<source src=../media/$0>
+  	</video>
+  	```
+:::
+:::
+
+
+:::{.content-hidden when-format="html" unless-format="revealjs"}
+
+:::{.notes}
+
+
+:::
+:::

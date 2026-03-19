@@ -1,12 +1,12 @@
 # -*- mode: snippet -*-
-# name:slide_image_ok 
-# key: sok
+# name: slide_list
+# key: sl
 # --
 
-## ${1:Title}
+##${1:Title}
 
 :::{.v-center-container}
-![](../media/${0})
+- ${0:Item}
 
 :::
 
@@ -14,7 +14,5 @@
 
 :::{.notes}
 
-
 :::
 :::
-

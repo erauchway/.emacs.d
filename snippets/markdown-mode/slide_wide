@@ -5,7 +5,7 @@
 ## ${1:Title}
 
 :::{.v-center-container .wide-image}
-![](../media/${0:image}
+![](../media/$0
 
 :::
 
