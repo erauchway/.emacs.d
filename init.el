@@ -92,9 +92,30 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
-(use-package wc-mode
-  :straight t
-  )
+;;;;;;;;;;;;;;;;;;
+;; custom modeline
+;;;;;;;;;;;;;;;;;;
+
+(setq-default mode-line-format
+  '("%e"
+    ;; filename in bold
+    (:eval (propertize (buffer-name) 'face 'bold))
+    "  "
+    ;; position
+    (:eval (propertize "%l:%c" 'face 'shadow))
+    "  "
+    ;; major mode (stripped of "-mode" suffix for brevity)
+    (:eval (propertize
+            (string-replace "-mode" "" (symbol-name major-mode))
+            'face 'italic))
+    "  "
+    ;; word count
+    (:eval (propertize
+            (format "W:%d" (count-words (point-min) (point-max)))
+            'face 'shadow))
+    ;; modified indicator
+    (:eval (when (buffer-modified-p)
+             (propertize "  ●" 'face '(:foreground "orange"))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; various necessities ;;
@@ -472,6 +493,141 @@
       ;; 3. Clean up the wrapping
       (setq fill-column 80)
       (fill-region (point-min) (point-max)))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Local alt text via MLX   ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+(defvar quarto-mlx-server-url "http://localhost:8080/v1/chat/completions"
+  "URL for the local MLX vision server.")
+
+(defvar quarto-mlx-model "mlx-community/Qwen3-VL-8B-Instruct-4bit"
+  "Model name to pass to the MLX server. Must match what was loaded.")
+
+(defun quarto--image-to-base64 (path)
+  "Return base64-encoded string of image at PATH."
+  (with-temp-buffer
+    (set-buffer-multibyte nil)
+    (insert-file-contents-literally path)
+    (base64-encode-region (point-min) (point-max) t)
+    (buffer-string)))
+
+(defun quarto--media-type (path)
+  "Return MIME type string for image PATH based on extension."
+  (let ((ext (downcase (file-name-extension path))))
+    (cond
+     ((string= ext "png")  "image/png")
+     ((string= ext "jpg")  "image/jpeg")
+     ((string= ext "jpeg") "image/jpeg")
+     ((string= ext "gif")  "image/gif")
+     ((string= ext "webp") "image/webp")
+     (t "image/png"))))
+
+(defvar quarto-alt-text-script "~/bin/alt_text.py"
+  "Path to the alt_text.py script.")
+
+(defvar quarto-alt-text-python "/Users/earauchway/tmp/ocr_working/ocr_env/bin/python")
+
+(defun quarto-insert-alt-text-local ()
+  "Generate alt text for the Markdown image at point using local mlx_vlm."
+  (interactive)
+  (let* ((line (thing-at-point 'line t))
+         (match (and line (string-match "!\\[\\([^]]*\\)\\](\\([^)]+\\))" line)))
+         (img-path-raw (and match (match-string 2 line)))
+         (img-path (and img-path-raw
+                        (expand-file-name img-path-raw
+                                          (file-name-directory
+                                           (or buffer-file-name default-directory))))))
+    (unless match
+      (user-error "No Markdown image syntax found on current line"))
+    (unless (and img-path (file-exists-p img-path))
+      (user-error "Image file not found: %s" img-path))
+    (message "Generating alt text for %s (this may take a moment)..." 
+             (file-name-nondirectory img-path))
+    (let* ((script (expand-file-name quarto-alt-text-script))
+           (result (shell-command-to-string
+                    (format "%s %s %s"
+			    quarto-alt-text-python
+                            (shell-quote-argument script)
+                            (shell-quote-argument img-path))))
+           (alt-text (string-trim result)))
+      (if (string-empty-p alt-text)
+          (message "No alt text returned — check that mlx_vlm is installed")
+        (save-excursion
+          (beginning-of-line)
+          (when (re-search-forward "!\\[\\([^]]*\\)\\](" (line-end-position) t)
+            (delete-region (match-beginning 1) (match-end 1))
+            (goto-char (match-beginning 1))
+            (insert alt-text)))
+        (message "Alt text inserted: %s" alt-text)))))
+
+
+(defun quarto-insert-all-alt-texts ()
+  "Generate and insert alt text for all images in the current buffer."
+  (interactive)
+  (let* ((base-dir (file-name-directory (or buffer-file-name default-directory)))
+         ;; Collect all image paths with empty alt text
+         (images '()))
+    ;; Scan buffer for ![](...) patterns
+    (save-excursion
+      (goto-char (point-min))
+      (while (re-search-forward "!\\[\\([^]]*\\)\\](\\([^)]+\\))" nil t)
+        (let* ((alt (match-string 1))
+               (path-raw (match-string 2))
+               (path (expand-file-name path-raw base-dir)))
+          (when (and (string-empty-p alt) (file-exists-p path))
+            (push (list path path-raw) images)))))
+    (if (null images)
+        (message "No images with empty alt text found.")
+      (message "Generating alt text for %d image(s)..." (length images))
+      (let* ((script (expand-file-name quarto-alt-text-script))
+             (paths (mapcar #'car images))
+             (cmd (concat quarto-alt-text-python " "
+                          (shell-quote-argument script) " "
+                          (mapconcat #'shell-quote-argument paths " ")))
+             (raw-output (shell-command-to-string cmd))
+             ;; Parse tab-separated path/alt-text pairs
+             (lines (seq-filter (lambda (l) (string-match-p "\t" l))
+                                (split-string raw-output "\n"))))
+        ;; Build a lookup table of path -> alt text
+        (let ((results (make-hash-table :test 'equal)))
+          (dolist (line lines)
+            (let* ((parts (split-string line "\t"))
+                   (path (car parts))
+                   (alt  (string-trim (cadr parts))))
+              (puthash path alt results)))
+          ;; Insert alt texts into buffer
+          (save-excursion
+            (goto-char (point-min))
+            (while (re-search-forward "!\\[\\([^]]*\\)\\](\\([^)]+\\))" nil t)
+              (let* ((alt (match-string 1))
+                     (path-raw (match-string 2))
+                     (path (expand-file-name path-raw base-dir))
+                     (alt-text (gethash path results)))
+                (when (and (string-empty-p alt) alt-text)
+                  (delete-region (match-beginning 1) (match-end 1))
+                  (goto-char (match-beginning 1))
+                  (insert alt-text))))))
+        (message "Done. Alt text inserted for %d image(s)." (length lines))))))
+
+;; Add keybinding alongside the single-image one
+(with-eval-after-load 'markdown-mode
+  (define-key markdown-mode-map (kbd "C-c a t") 'quarto-insert-alt-text-local)
+  (define-key markdown-mode-map (kbd "C-c a b") 'quarto-insert-all-alt-texts))
+
+(defun quarto-start-mlx-server ()
+  "Start the local MLX vision server in a vterm buffer."
+  (interactive)
+  (let ((buf (get-buffer-create "*mlx-server*")))
+    (with-current-buffer buf
+      (vterm-mode)
+      (vterm-send-string
+       (format "python -m mlx_lm.server --model mlx-community/Qwen3-VL-8B-Instruct-4bit --port 8080\n"
+               quarto-mlx-model)))
+    (display-buffer buf)))
+
 
 
 (custom-set-variables
