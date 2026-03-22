@@ -63,12 +63,15 @@
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
 
+(use-package gruvbox-theme
+  :straight t
+  )
 
 
 (defun toggle-light-dark-theme ()
   (interactive)
-  (let* ((light-theme 'modus-operandi-tinted) ; Your preferred light theme name
-         (dark-theme 'modus-vivendi)   ; Your preferred dark theme name
+  (let* ((light-theme 'gruvbox-light-hard) ; Your preferred light theme name
+         (dark-theme 'gruvbox-dark-soft)   ; Your preferred dark theme name
          (current-theme (car custom-enabled-themes))
          (next-theme (if (eq current-theme light-theme)
                          dark-theme
@@ -159,8 +162,17 @@
  	vertico-resize nil
 	vertico-directory-mode +1)
    )
-(with-eval-after-load 'vertico
-  (define-key vertico-map (kbd "<backspace>") #'vertico-directory-delete-word))
+;; (with-eval-after-load 'vertico
+;;   (define-key vertico-map (kbd "<backspace>") #'vertico-directory-delete-word))
+(use-package vertico-directory
+  :after vertico
+  :ensure nil
+  :bind (:map vertico-map
+	      ("RET" . vertico-directory-enter)
+	      ("DEL" . vertico-directory-delete-char)
+	      ("M-DEL" . vertico-directory-delete-word))
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+
 (use-package consult
   :straight t
   :after (vertico)
@@ -215,6 +227,16 @@
 
 ;; json
 (use-package json-mode
+  :straight t
+  )
+
+;; lua
+(use-package lua-mode
+  :straight t
+  )
+
+;; typst
+(use-package typst-ts-mode
   :straight t
   )
 
@@ -409,7 +431,25 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (when (string= system-name "Erics-Mac-mini.local")
-  (load-theme 'modus-vivendi)
+  (use-package gruvbox-theme
+    :straight t)
+  (defun load-my-themes ()
+  (interactive)
+  (cond
+   ((display-graphic-p)
+    ;; Theme for GUI Emacs (e.g., when run locally or via X forwarding)
+    (disable-theme 'modus-operandi-tinted) ;; Disable TTY theme if it was somehow active
+    (load-theme 'gruvbox-dark-soft t))
+   (t
+    ;; Theme for Terminal Emacs (emacs -nw)
+    (disable-theme 'gruvbox-dark-soft) ;; Disable GUI theme
+    (load-theme 'modus-operandi-tinted t))))
+  ;; Add a hook to run the function when Emacs starts up or a new frame is created
+  (add-hook 'after-make-frame-functions (lambda (frame) (with-selected-frame frame (load-my-themes))))
+
+;; Initial call for the first frame
+(load-my-themes)
+  ;; (load-theme 'gruvbox-dark-soft t)
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 130)))
     (defun my-setup-initial-window-setup()
     "Do initial window setup"
@@ -531,11 +571,13 @@
 (defvar quarto-alt-text-python "/Users/earauchway/tmp/ocr_working/ocr_env/bin/python")
 
 (defun quarto-insert-alt-text-local ()
-  "Generate alt text for the Markdown image at point using local mlx_vlm."
+  "Generate alt text for the Markdown image at point using local mlx_vlm.
+Alt text is written to a {fig-alt=\"...\"} attribute block rather than
+the square-bracket caption field."
   (interactive)
   (let* ((line (thing-at-point 'line t))
-         (match (and line (string-match "!\\[\\([^]]*\\)\\](\\([^)]+\\))" line)))
-         (img-path-raw (and match (match-string 2 line)))
+         (match (and line (string-match "!\\[[^]]*\\](\\([^)]+\\))" line)))
+         (img-path-raw (and match (match-string 1 line)))
          (img-path (and img-path-raw
                         (expand-file-name img-path-raw
                                           (file-name-directory
@@ -544,43 +586,71 @@
       (user-error "No Markdown image syntax found on current line"))
     (unless (and img-path (file-exists-p img-path))
       (user-error "Image file not found: %s" img-path))
-    (message "Generating alt text for %s (this may take a moment)..." 
+    (message "Generating alt text for %s (this may take a moment)..."
              (file-name-nondirectory img-path))
     (let* ((script (expand-file-name quarto-alt-text-script))
            (result (shell-command-to-string
                     (format "%s %s %s"
-			    quarto-alt-text-python
+                            quarto-alt-text-python
                             (shell-quote-argument script)
                             (shell-quote-argument img-path))))
-           (alt-text (string-trim result)))
+           (alt-text (replace-regexp-in-string "\"" "\\\\\"" (string-trim result))))
       (if (string-empty-p alt-text)
           (message "No alt text returned — check that mlx_vlm is installed")
         (save-excursion
           (beginning-of-line)
-          (when (re-search-forward "!\\[\\([^]]*\\)\\](" (line-end-position) t)
-            (delete-region (match-beginning 1) (match-end 1))
-            (goto-char (match-beginning 1))
-            (insert alt-text)))
+          ;; Match the image syntax, then optionally an existing {...} block
+          (when (re-search-forward
+                 "!\\[[^]]*\\](\\([^)]+\\))\\({[^}]*}\\)?"
+                 (line-end-position) t)
+            (let ((attr-start (match-beginning 2))
+                  (attr-end   (match-end 2)))
+              (if (and attr-start attr-end)
+                  ;; A {...} block already exists — update or insert fig-alt inside it
+                  (let ((attrs (match-string 2)))
+                    (if (string-match "fig-alt=\"[^\"]*\"" attrs)
+                        ;; Replace existing fig-alt value
+                        (progn
+                          (delete-region attr-start attr-end)
+                          (insert (replace-regexp-in-string
+                                   "fig-alt=\"[^\"]*\""
+                                   (format "fig-alt=\"%s\"" alt-text)
+                                   attrs)))
+                      ;; Append fig-alt before the closing brace
+                      (delete-region attr-start attr-end)
+                      (insert (replace-regexp-in-string
+                               "}"
+                               (format " fig-alt=\"%s\"}" alt-text)
+                               attrs))))
+                ;; No {...} block — append one after the closing paren
+                (goto-char (match-end 0))
+                (insert (format "{fig-alt=\"%s\"}" alt-text))))))
         (message "Alt text inserted: %s" alt-text)))))
 
 
 (defun quarto-insert-all-alt-texts ()
-  "Generate and insert alt text for all images in the current buffer."
+  "Generate and insert alt text for all images in the current buffer.
+Alt text is written to a {fig-alt=\"...\"} attribute block rather than
+the square-bracket caption field.  Only images that lack a fig-alt
+attribute are processed."
   (interactive)
   (let* ((base-dir (file-name-directory (or buffer-file-name default-directory)))
-         ;; Collect all image paths with empty alt text
          (images '()))
-    ;; Scan buffer for ![](...) patterns
+    ;; Scan buffer for image lines that have no fig-alt yet
     (save-excursion
       (goto-char (point-min))
-      (while (re-search-forward "!\\[\\([^]]*\\)\\](\\([^)]+\\))" nil t)
-        (let* ((alt (match-string 1))
-               (path-raw (match-string 2))
-               (path (expand-file-name path-raw base-dir)))
-          (when (and (string-empty-p alt) (file-exists-p path))
+      (while (re-search-forward
+              "!\\[[^]]*\\](\\([^)]+\\))\\({[^}]*}\\)?"
+              nil t)
+        (let* ((path-raw  (match-string 1))
+               (attr-block (match-string 2))
+               (path      (expand-file-name path-raw base-dir))
+               (has-alt   (and attr-block
+                               (string-match-p "fig-alt=\"" attr-block))))
+          (when (and (not has-alt) (file-exists-p path))
             (push (list path path-raw) images)))))
     (if (null images)
-        (message "No images with empty alt text found.")
+        (message "No images without fig-alt found.")
       (message "Generating alt text for %d image(s)..." (length images))
       (let* ((script (expand-file-name quarto-alt-text-script))
              (paths (mapcar #'car images))
@@ -588,31 +658,43 @@
                           (shell-quote-argument script) " "
                           (mapconcat #'shell-quote-argument paths " ")))
              (raw-output (shell-command-to-string cmd))
-             ;; Parse tab-separated path/alt-text pairs
              (lines (seq-filter (lambda (l) (string-match-p "\t" l))
                                 (split-string raw-output "\n"))))
-        ;; Build a lookup table of path -> alt text
         (let ((results (make-hash-table :test 'equal)))
           (dolist (line lines)
             (let* ((parts (split-string line "\t"))
-                   (path (car parts))
-                   (alt  (string-trim (cadr parts))))
+                   (path  (car parts))
+                   (alt   (replace-regexp-in-string "\"" "\\\\\"" (string-trim (cadr parts)))))
               (puthash path alt results)))
           ;; Insert alt texts into buffer
           (save-excursion
             (goto-char (point-min))
-            (while (re-search-forward "!\\[\\([^]]*\\)\\](\\([^)]+\\))" nil t)
-              (let* ((alt (match-string 1))
-                     (path-raw (match-string 2))
-                     (path (expand-file-name path-raw base-dir))
-                     (alt-text (gethash path results)))
-                (when (and (string-empty-p alt) alt-text)
-                  (delete-region (match-beginning 1) (match-end 1))
-                  (goto-char (match-beginning 1))
-                  (insert alt-text))))))
+            (while (re-search-forward
+                    "!\\[[^]]*\\](\\([^)]+\\))\\({[^}]*}\\)?"
+                    nil t)
+              (let* ((path-raw   (match-string 1))
+                     (attr-block (match-string 2))
+                     (path       (expand-file-name path-raw base-dir))
+                     (has-alt    (and attr-block
+                                      (string-match-p "fig-alt=\"" attr-block)))
+                     (alt-text   (gethash path results)))
+                (when (and (not has-alt) alt-text)
+                  (let ((attr-start (match-beginning 2))
+                        (attr-end   (match-end 2)))
+                    (if (and attr-start attr-end)
+                        ;; Append fig-alt into the existing {...} block
+                        (let ((attrs (match-string 2)))
+                          (delete-region attr-start attr-end)
+                          (insert (replace-regexp-in-string
+                                   "}"
+                                   (format " fig-alt=\"%s\"}" alt-text)
+                                   attrs)))
+                      ;; No {...} block — append one
+                      (goto-char (match-end 0))
+                      (insert (format "{fig-alt=\"%s\"}" alt-text)))))))))
         (message "Done. Alt text inserted for %d image(s)." (length lines))))))
 
-;; Add keybinding alongside the single-image one
+;; Keybindings
 (with-eval-after-load 'markdown-mode
   (define-key markdown-mode-map (kbd "C-c a t") 'quarto-insert-alt-text-local)
   (define-key markdown-mode-map (kbd "C-c a b") 'quarto-insert-all-alt-texts))
@@ -648,5 +730,4 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-
  )
