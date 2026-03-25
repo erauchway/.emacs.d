@@ -118,7 +118,7 @@
             'face 'shadow))
     ;; modified indicator
     (:eval (when (buffer-modified-p)
-             (propertize "  ●" 'face '(:foreground "orange"))))))
+             (propertize "  ●" 'face '(:foreground "yellow"))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; various necessities ;;
@@ -181,6 +181,12 @@
   :straight t
   :after (vertico)
   :init (marginalia-mode)
+  )
+(use-package orderless
+  :straight t
+  :after(vertico)
+  :config
+  (setq completion-styles '(orderless basic))
   )
 (use-package all-the-icons
   :straight t
@@ -356,7 +362,7 @@
   :no-require
   :config (citar-embark-mode)
   )
-(setq citar-bibliography '("~/Dropbox/common/big_bib.json"))
+(setq citar-bibliography '("~/writing/bibliography/frontiers.json"))
 
 ;; markdown setup
 (use-package markdown-mode
@@ -438,12 +444,12 @@
   (cond
    ((display-graphic-p)
     ;; Theme for GUI Emacs (e.g., when run locally or via X forwarding)
-    (disable-theme 'modus-operandi-tinted) ;; Disable TTY theme if it was somehow active
+    (disable-theme 'gruvbox-light-hard) ;; Disable TTY theme if it was somehow active
     (load-theme 'gruvbox-dark-soft t))
    (t
     ;; Theme for Terminal Emacs (emacs -nw)
     (disable-theme 'gruvbox-dark-soft) ;; Disable GUI theme
-    (load-theme 'modus-operandi-tinted t))))
+    (load-theme 'gruvbox-light-hard t))))
   ;; Add a hook to run the function when Emacs starts up or a new frame is created
   (add-hook 'after-make-frame-functions (lambda (frame) (with-selected-frame frame (load-my-themes))))
 
@@ -466,6 +472,8 @@
   )
 
 (when (string= system-name "Erics-Macbook-Air.local")
+  (use-package gruvbox-theme
+    :straight t)
   ;; base theme by time of day
   (setq calendar-latitude 38.5)
   (setq calendar-longitude -121.7)
@@ -474,8 +482,8 @@
     :straight t
     :after solar
     :config
-    (setq circadian-themes '((:sunrise . modus-operandi-tinted)
-			     (:sunset . modus-vivendi)))
+    (setq circadian-themes '((:sunrise . gruvbox-light-hard)
+			     (:sunset . gruvbox-dark-soft)))
     (circadian-setup)
     )
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
@@ -710,7 +718,44 @@ attribute are processed."
                quarto-mlx-model)))
     (display-buffer buf)))
 
+;; for Zotero-annotated Word documents in and out of Quarto/markdown
 
+(defun my/docx-to-md (docx-file)
+  "Convert a Zotero-annotated docx to Quarto markdown."
+  (interactive "fDocx file: ")
+  (let* ((default-directory (file-name-directory docx-file))
+         (md-file (concat (file-name-sans-extension docx-file) ".md"))
+         (cmd (format "python3 /Users/earauchway/writing/zotero_docx_convert.py to-md %s %s"
+                      (shell-quote-argument docx-file)
+                      (shell-quote-argument md-file))))
+    (shell-command cmd)
+    (find-file md-file)
+    (message "Converted to %s" md-file)))
+
+(defun my/insert-quarto-front-matter ()
+  "Insert a Quarto YAML block at the top of the buffer if absent."
+  (unless (save-excursion (goto-char (point-min)) (looking-at "^---"))
+    (goto-char (point-min))
+    (insert "---\nbibliography: ~/path/to/library.bib\n---\n\n")))
+
+(defun my/quarto-render-to-docx ()
+  "Render current Zotero markdown buffer back to docx."
+  (interactive)
+  (save-buffer)
+  (let* ((md-file (buffer-file-name))
+         (default-directory (file-name-directory md-file))
+         (docx-file (read-string "Output docx file: "
+                                    default-directory
+                                    nil nil
+                                    (concat (file-name-base md-file) "_out.docx")))
+         (cmd (format "python3 /Users/earauchway/writing/zotero_docx_convert.py to-docx %s %s"
+                      (shell-quote-argument md-file)
+                      (shell-quote-argument docx-file))))
+    (compile cmd)
+    (message "Written to %s" docx-file)))
+
+(global-set-key (kbd "C-c z i") #'my/docx-to-md)
+(global-set-key (kbd "C-c z o") #'my/quarto-render-to-docx) 
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
