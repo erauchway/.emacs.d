@@ -63,23 +63,23 @@
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
 
-(use-package gruvbox-theme
-  :straight t
-  )
+;; (use-package gruvbox-theme
+;;   :straight t
+;;   )
 
 
-(defun toggle-light-dark-theme ()
-  (interactive)
-  (let* ((light-theme 'gruvbox-light-hard) ; Your preferred light theme name
-         (dark-theme 'gruvbox-dark-soft)   ; Your preferred dark theme name
-         (current-theme (car custom-enabled-themes))
-         (next-theme (if (eq current-theme light-theme)
-                         dark-theme
-                       light-theme)))
-    (load-theme next-theme t)
-    (message "Switched to %s theme" next-theme)))
+;; (defun toggle-light-dark-theme ()
+;;   (interactive)
+;;   (let* ((light-theme 'gruvbox-light-hard) ; Your preferred light theme name
+;;          (dark-theme 'gruvbox-dark-soft)   ; Your preferred dark theme name
+;;          (current-theme (car custom-enabled-themes))
+;;          (next-theme (if (eq current-theme light-theme)
+;;                          dark-theme
+;;                        light-theme)))
+;;     (load-theme next-theme t)
+;;     (message "Switched to %s theme" next-theme)))
 
-(global-set-key [f5] 'toggle-light-dark-theme)
+;; (global-set-key [f5] 'toggle-light-dark-theme)
 
 
 ;; Starting buffer
@@ -435,21 +435,35 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup by system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
+;; (use-package gruvbox-theme
+;;   :straight t
+;;   :config
+;;   (load-theme gruvbox-dark-soft t)
+;;   )
+
+(use-package doric-themes
+  :straight t
+  :config (load-theme doric-light t)
+  (setq doric-themes-to-toggle '(doric-light doric-dark))
+  (setq doric-themes-to-rotate doric-themes-collection)
+  (doric-themes-select 'doric-light)
+  :bind
+  (("<f5>" . doric-themes-toggle)
+   ("C-<f5>" . doric-themes-select)
+   ("M-<f5>" . doric-themes-rotate)))
 
 (when (string= system-name "Erics-Mac-mini.local")
-  (use-package gruvbox-theme
-    :straight t)
   (defun load-my-themes ()
   (interactive)
   (cond
    ((display-graphic-p)
     ;; Theme for GUI Emacs (e.g., when run locally or via X forwarding)
-    (disable-theme 'gruvbox-light-hard) ;; Disable TTY theme if it was somehow active
-    (load-theme 'gruvbox-dark-soft t))
+    (disable-theme 'doric-light) ;; Disable TTY theme if it was somehow active
+    (load-theme 'doric-dark t))
    (t
     ;; Theme for Terminal Emacs (emacs -nw)
-    (disable-theme 'gruvbox-dark-soft) ;; Disable GUI theme
-    (load-theme 'gruvbox-light-hard t))))
+    (disable-theme 'doric-dark) ;; Disable GUI theme
+    (load-theme 'doric-light t))))
   ;; Add a hook to run the function when Emacs starts up or a new frame is created
   (add-hook 'after-make-frame-functions (lambda (frame) (with-selected-frame frame (load-my-themes))))
 
@@ -471,19 +485,18 @@
   (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160)
   )
 
+
 (when (string= system-name "Erics-Macbook-Air.local")
-  (use-package gruvbox-theme
-    :straight t)
   ;; base theme by time of day
   (setq calendar-latitude 38.5)
   (setq calendar-longitude -121.7)
-
+  (require 'solar)
   (use-package circadian
     :straight t
     :after solar
     :config
-    (setq circadian-themes '((:sunrise . gruvbox-light-hard)
-			     (:sunset . gruvbox-dark-soft)))
+    (setq circadian-themes '((:sunrise . doric-light)
+			     (:sunset . doric-dark)))
     (circadian-setup)
     )
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
@@ -501,11 +514,6 @@
   )
 
 (when (eq system-type 'gnu/linux)
-  (use-package gruvbox-theme
-   :straight t
-   :config
-   (load-theme 'gruvbox-dark-soft t))
-
   (defun my-setup-initial-window-setup()
     "Do initial window setup"
     (interactive)
