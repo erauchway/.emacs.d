@@ -98,7 +98,8 @@
 ;;;;;;;;;;;;;;;;;;
 ;; custom modeline
 ;;;;;;;;;;;;;;;;;;
-
+(require 'battery)
+(display-battery-mode 1)
 (setq-default mode-line-format
   '("%e"
     ;; filename in bold
@@ -118,7 +119,18 @@
             'face 'shadow))
     ;; modified indicator
     (:eval (when (buffer-modified-p)
-             (propertize "  ●" 'face '(:foreground "yellow"))))))
+             (propertize "  ●" 'face '(:foreground "yellow"))))
+    "  "
+    ;; time-day-date
+    ;;(:eval (propertize (current-time-string) 'face 'shadow))
+    (:eval (propertize (format-time-string "%a %e %b %k:%M") 'face 'shadow))
+    (:eval (when (and battery-status-function
+                      (not (string= "N/A" (cdr (assoc ?p (funcall battery-status-function))))))
+             (propertize
+              (format "  🔋%s" (cdr (assoc ?p (funcall battery-status-function))))
+              'face 'shadow)))
+    ))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; various necessities ;;
@@ -258,12 +270,12 @@
   :config
   (setq vterm-shell "/bin/zsh")
   )
-(add-to-list 'display-buffer-alist
-             '("\\*vterm\\*"
-               (display-buffer-in-side-window)
-               (side . bottom)
-               (slot . 0)
-               (window-height . 0.2))) ; 20% height
+;; (add-to-list 'display-buffer-alist
+;;              '("\\*vterm\\*"
+;;                (display-buffer-in-side-window)
+;;                (side . bottom)
+;;                (slot . 0)
+;;                (window-height . 0.2))) ; 20% height
 
 ;; ido
 (setq ido-enable-flex-matching t
@@ -485,33 +497,42 @@
   (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160)
   )
 
-
 (when (string= system-name "Erics-Macbook-Air.local")
+  ;; Get location from CoreLocationCLI, fall back to hardcoded defaults
+  (defun my/set-calendar-location ()
+    "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
+    (let ((output (shell-command-to-string "CoreLocationCLI -once -format \"%latitude %longitude\"")))
+      (if (string-match "\\(-?[0-9]+\\.[0-9]+\\) \\(-?[0-9]+\\.[0-9]+\\)" output)
+          (setq calendar-latitude  (string-to-number (match-string 1 output))
+                calendar-longitude (string-to-number (match-string 2 output)))
+        (setq calendar-latitude  38.5
+              calendar-longitude -121.7))))
+
+  (my/set-calendar-location)
+
   ;; base theme by time of day
-  (setq calendar-latitude 38.5)
-  (setq calendar-longitude -121.7)
   (require 'solar)
   (use-package circadian
     :straight t
     :after solar
     :config
     (setq circadian-themes '((:sunrise . doric-light)
-			     (:sunset . doric-dark)))
-    (circadian-setup)
-    )
+                             (:sunset  . doric-dark)))
+    (circadian-setup))
+
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
-    (defun my-setup-initial-window-setup()
+
+  (defun my-setup-initial-window-setup ()
     "Do initial window setup"
     (interactive)
-    (set-face-attribute 'default nil :font "Noto Sans Mono 14")
-    )
+    (set-face-attribute 'default nil :font "Noto Sans Mono 14"))
+
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   (setq mac-command-modifier 'meta)
   (setq mac-option-modifier nil)
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
-  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 140)
-  )
+  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 140))
 
 (when (eq system-type 'gnu/linux)
   (defun my-setup-initial-window-setup()
@@ -526,6 +547,39 @@
   )
 
 
+(defun my/mac-get-location ()
+  "Return (lat . lon) using macOS CoreLocation via pyobjc. No installs needed."
+  (condition-case nil
+      (let* ((script "
+import objc, CoreLocation, time, sys
+from PyObjCTools import AppHelper
+
+class Delegate(CoreLocation.NSObject):
+    location = None
+    def locationManager_didUpdateLocations_(self, mgr, locs):
+        self.location = locs[-1]
+        AppHelper.stopEventLoop()
+    def locationManager_didFailWithError_(self, mgr, err):
+        AppHelper.stopEventLoop()
+
+d = Delegate.alloc().init()
+m = CoreLocation.CLLocationManager.alloc().init()
+m.setDelegate_(d)
+m.startUpdatingLocation()
+AppHelper.runConsoleEventLoop(installInterrupt=True)
+if d.location:
+    c = d.location.coordinate()
+    print(c.latitude, c.longitude)
+")
+             (raw (string-trim
+                   (shell-command-to-string
+                    (concat "python3 -c '" script "'"))))
+             (_ (unless (string-match
+                         "\\(-?[0-9.]+\\)\\s-+\\(-?[0-9.]+\\)" raw)
+                  (error "parse fail"))))
+        (cons (string-to-number (match-string 1 raw))
+              (string-to-number (match-string 2 raw))))
+    (error (cons 38.5 -121.7))))
 
 ;; for cleaning whisper transcripts
 (defun transcript-polish ()
