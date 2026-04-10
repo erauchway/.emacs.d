@@ -4,6 +4,7 @@
 ;; packages, etc. ;;
 ;;;;;;;;;;;;;;;;;;;;
 
+
 ;; Straight package management
 (setq package-enable-at-startup nil)
 (defvar bootstrap-version)
@@ -19,6 +20,8 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage)
   )
+(straight-use-package 'transient)
+(require 'transient)
 
 
 ;; Use-package
@@ -456,14 +459,7 @@
 
 (use-package doric-themes
   :straight t
-  :config (load-theme doric-light t)
-  (setq doric-themes-to-toggle '(doric-light doric-dark))
-  (setq doric-themes-to-rotate doric-themes-collection)
-  (doric-themes-select 'doric-light)
-  :bind
-  (("<f5>" . doric-themes-toggle)
-   ("C-<f5>" . doric-themes-select)
-   ("M-<f5>" . doric-themes-rotate)))
+  )
 
 (when (string= system-name "Erics-Mac-mini.local")
   (defun load-my-themes ()
@@ -920,7 +916,9 @@ attribute are processed."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0"
+   '("4bc34187baf114f1f3de085ffe9510b3c43fe505d21bd52d75bd5aade8c7839e"
+     "6b9fbe5d88424ac7283b8f36b6f184d1140fcd4bfcab1f72a3c58c48dc254bae"
+     "9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0"
      "871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8"
      "a5270d86fac30303c5910be7403467662d7601b821af2ff0c4eb181153ebfc0a"
      "ba323a013c25b355eb9a0550541573d535831c557674c8d59b9ac6aa720c21d3"
