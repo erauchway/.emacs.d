@@ -57,6 +57,7 @@
 (keymap-global-set "C-x g" 'magit-status)
 (keymap-global-set "C-x C-r" 'recentf-open)
 (keymap-global-set "C-c s" 'yas-insert-snippet)
+(keymap-global-set "C-c f" 'toggle-frame-fullscreen)
 
 
 ;;;;;;;;;;;;;;;;
@@ -498,7 +499,8 @@
   )
 
 (when (string= system-name "Erics-Macbook-Air.local")
-  ;; Get location from CoreLocationCLI, fall back to hardcoded defaults
+
+  ;; ── Location ───────────────────────────────────────────────────────────────
   (defun my/set-calendar-location ()
     "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
     (let ((output (shell-command-to-string "CoreLocationCLI -once -format \"%latitude %longitude\"")))
@@ -507,10 +509,49 @@
                 calendar-longitude (string-to-number (match-string 2 output)))
         (setq calendar-latitude  38.5
               calendar-longitude -121.7))))
-
   (my/set-calendar-location)
 
-  ;; base theme by time of day
+  ;; ── Theme state ────────────────────────────────────────────────────────────
+  (defvar my/current-theme-variant nil
+    "Current theme variant: 'light or 'dark.")
+
+  (defun my/apply-pdf-theme (variant)
+    "Apply midnight-mode or normal rendering to all open PDF buffers."
+    (when (featurep 'pdf-tools)
+      (let ((enable (eq variant 'dark)))
+        (if enable
+            (add-hook 'pdf-view-mode-hook #'pdf-view-midnight-minor-mode)
+          (remove-hook 'pdf-view-mode-hook #'pdf-view-midnight-minor-mode))
+        (dolist (buf (buffer-list))
+          (with-current-buffer buf
+            (when (derived-mode-p 'pdf-view-mode)
+              (pdf-view-midnight-minor-mode (if enable 1 -1))))))))
+
+  ;; Called by the circadian hook (below) and by the manual toggle
+  (defun my/sync-theme-variant ()
+    "Detect which theme circadian just loaded and sync PDF + state var."
+    (let ((variant (if (member 'doric-dark custom-enabled-themes) 'dark 'light)))
+      (setq my/current-theme-variant variant)
+      (my/apply-pdf-theme variant)))
+
+  ;; ── Toggle ─────────────────────────────────────────────────────────────────
+  (defvar my/theme-override nil
+    "When non-nil, circadian hook is suppressed (manual toggle active).")
+
+  (defun my/toggle-light-dark ()
+    "Toggle between light and dark theme, suppressing circadian auto-switch."
+    (interactive)
+    (setq my/theme-override t)
+    (let ((variant (if (eq my/current-theme-variant 'dark) 'light 'dark)))
+      (setq my/current-theme-variant variant)
+      (mapc #'disable-theme custom-enabled-themes)
+      (load-theme (if (eq variant 'dark) 'doric-dark 'doric-light) t)
+      (my/apply-pdf-theme variant)))
+
+  ;; Cmd-Shift-T  (M = Meta = Cmd given your modifier settings)
+  (global-set-key (kbd "M-T") #'my/toggle-light-dark)
+
+  ;; ── Circadian ──────────────────────────────────────────────────────────────
   (require 'solar)
   (use-package circadian
     :straight t
@@ -518,21 +559,75 @@
     :config
     (setq circadian-themes '((:sunrise . doric-light)
                              (:sunset  . doric-dark)))
+    (add-hook 'circadian-after-load-theme-hook
+              (lambda (theme)
+                (unless my/theme-override
+                  (my/sync-theme-variant))))
     (circadian-setup))
 
+  ;; ── PDF-tools ──────────────────────────────────────────────────────────────
+  (use-package pdf-tools
+    :straight t
+    :defer t
+    :config
+    (pdf-tools-install)
+    ;; Tweak these colours to match your doric-dark foreground/background:
+    (setq pdf-view-midnight-colors '("#d4c9a8" . "#1e1e1e"))
+    (add-hook 'pdf-view-mode-hook
+              (lambda ()
+                (when (eq my/current-theme-variant 'dark)
+                  (pdf-view-midnight-minor-mode 1)))))
+
+  ;; ── Window / font setup ────────────────────────────────────────────────────
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
 
   (defun my-setup-initial-window-setup ()
-    "Do initial window setup"
+    "Do initial window setup."
     (interactive)
     (set-face-attribute 'default nil :font "Noto Sans Mono 14"))
-
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+
   (setq mac-command-modifier 'meta)
   (setq mac-option-modifier nil)
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
   (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 140))
+;; (when (string= system-name "Erics-Macbook-Air.local")
+;;   ;; Get location from CoreLocationCLI, fall back to hardcoded defaults
+;;   (defun my/set-calendar-location ()
+;;     "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
+;;     (let ((output (shell-command-to-string "CoreLocationCLI -once -format \"%latitude %longitude\"")))
+;;       (if (string-match "\\(-?[0-9]+\\.[0-9]+\\) \\(-?[0-9]+\\.[0-9]+\\)" output)
+;;           (setq calendar-latitude  (string-to-number (match-string 1 output))
+;;                 calendar-longitude (string-to-number (match-string 2 output)))
+;;         (setq calendar-latitude  38.5
+;;               calendar-longitude -121.7))))
+
+;;   (my/set-calendar-location)
+
+;;   ;; base theme by time of day
+;;   (require 'solar)
+;;   (use-package circadian
+;;     :straight t
+;;     :after solar
+;;     :config
+;;     (setq circadian-themes '((:sunrise . doric-light)
+;;                              (:sunset  . doric-dark)))
+;;     (circadian-setup))
+
+;;   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
+
+;;   (defun my-setup-initial-window-setup ()
+;;     "Do initial window setup"
+;;     (interactive)
+;;     (set-face-attribute 'default nil :font "Noto Sans Mono 14"))
+
+;;   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
+;;   (setq mac-command-modifier 'meta)
+;;   (setq mac-option-modifier nil)
+;;   (setq mac-control-modifier 'control)
+;;   (setq ispell-program-name "/opt/homebrew/bin/aspell")
+;;   (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 140))
 
 (when (eq system-type 'gnu/linux)
   (defun my-setup-initial-window-setup()
