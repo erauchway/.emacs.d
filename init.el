@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 ;; attempt to setup plain vanilla emacs to my liking
 
 ;;;;;;;;;;;;;;;;;;;; 
@@ -867,9 +869,13 @@ attribute are processed."
     (with-current-buffer buf
       (vterm-mode)
       (vterm-send-string
-       (format "python -m mlx_lm.server --model mlx-community/Qwen3-VL-8B-Instruct-4bit --port 8080\n"
+       (format "python -m mlx_lm.server --model %s \n"
                quarto-mlx-model)))
     (display-buffer buf)))
+
+;;;;;;;;;;;;;;;;;;;;;;
+;; Quarto Functions ;;
+;;;;;;;;;;;;;;;;;;;;;;
 
 ;; for Zotero-annotated Word documents in and out of Quarto/markdown
 
@@ -909,6 +915,188 @@ attribute are processed."
 
 (global-set-key (kbd "C-c z i") #'my/docx-to-md)
 (global-set-key (kbd "C-c z o") #'my/quarto-render-to-docx) 
+
+;;;;;;;;;;;;;;;;;;;;;
+;; Quarto Previews ;;
+;;;;;;;;;;;;;;;;;;;;;
+
+
+
+(defvar my/quarto--file-notify-descriptor nil
+  "File notify watch descriptor for the current quarto PDF preview.")
+
+(defun my/quarto-get-formats ()
+  "Parse ALL output formats from the current qmd file's YAML front matter."
+  (save-excursion
+    (goto-char (point-min))
+    (when (looking-at "---")
+      (let ((yaml-end (re-search-forward "^---$" nil t)))
+        (when yaml-end
+          (let ((yaml (buffer-substring-no-properties (point-min) yaml-end))
+                (formats '())
+                (known-formats '("revealjs" "pdf" "beamer" "html" "docx"
+                                 "pptx" "epub" "typst" "odt" "gfm"
+                                 "commonmark" "hugo" "jekyll")))
+            (dolist (fmt known-formats)
+              (when (string-match-p (concat "\\(format:.*" fmt
+                                            "\\|^\s*" fmt ":\\)") yaml)
+                (push fmt formats)))
+            (nreverse formats)))))))
+
+(defun my/quarto-select-format ()
+  "Prompt user to select a format from those declared in the qmd front matter."
+  (let ((formats (my/quarto-get-formats)))
+    (if formats
+        (completing-read "Quarto format: " formats nil t)
+      (completing-read "Quarto format (not detected, enter manually): "
+                       '("html" "pdf" "revealjs" "beamer" "docx" "typst")
+                       nil nil))))
+
+(defun my/quarto-preview (&optional prompt-format)
+  "Preview current qmd file, prompting for format if multiple are declared.
+With prefix argument C-u, always prompt for format selection."
+  (interactive "P")
+  (let* ((file (buffer-file-name))
+         (formats (my/quarto-get-formats))
+         (format
+          (cond
+           (prompt-format          (my/quarto-select-format))
+           ((> (length formats) 1) (my/quarto-select-format))
+           ((= (length formats) 1) (car formats))
+           (t                      (my/quarto-select-format)))))
+    (unless (and file (string-match-p "\\.qmd\\'" file))
+      (user-error "Not visiting a .qmd file"))
+    (message "Previewing as %s..." format)
+    (pcase format
+      ((or "revealjs" "html" "gfm" "commonmark" "hugo" "jekyll")
+       (my/quarto--start-preview file format))
+      ((or "pdf" "beamer" "typst")
+       (my/quarto--render-pdf file format))
+      ((or "docx" "pptx" "epub" "odt")
+       (my/quarto--render-and-open file format))
+      (_ (my/quarto--start-preview file format)))))
+
+(defun my/quarto--start-preview (file format)
+  "Launch quarto preview server for FILE with FORMAT in a side window."
+  (let ((buf-name "*quarto-preview*"))
+    (when-let ((buf (get-buffer buf-name)))
+      (when-let ((proc (get-buffer-process buf)))
+        (delete-process proc))
+      (kill-buffer buf))
+    (let ((proc-buf (get-buffer-create buf-name)))
+      (start-process "quarto-preview" proc-buf
+                     "quarto" "preview" file
+                     "--to" format
+                     "--no-browser" "--no-watch-inputs")
+      (display-buffer proc-buf
+                      '(display-buffer-in-side-window
+                        (side . right)
+                        (window-width . 0.5))))))
+
+(defun my/quarto--render-pdf (file format)
+  "Render FILE to FORMAT and open the result in a side window."
+  (let* ((buf-name "*quarto-render*")
+         (local-file file))
+    (when-let ((buf (get-buffer buf-name)))
+      (kill-buffer buf))
+    (let* ((proc-buf (get-buffer-create buf-name))
+           (proc (start-process "quarto-render" proc-buf
+                                "quarto" "render" local-file "--to" format)))
+      (display-buffer proc-buf
+                      '(display-buffer-in-side-window
+                        (side . right)
+                        (window-width . 0.5)))
+      (set-process-sentinel
+       proc
+       (lambda (p _event)
+         (when (eq (process-status p) 'exit)
+           (if (= (process-exit-status p) 0)
+               (let ((pdf-file
+                      (with-current-buffer (process-buffer p)
+                        (goto-char (point-min))
+                        (when (re-search-forward
+                               "Output created: \\(.+\\)$" nil t)
+                          (expand-file-name
+                           (string-trim (match-string 1))
+                           (file-name-directory local-file))))))
+                 (if pdf-file
+                     (my/quarto--open-in-side-window pdf-file)
+                   (message "Render succeeded but couldn't find output path in log")))
+             (message "Quarto render FAILED — check *quarto-render* buffer"))))))))
+
+(defun my/quarto--render-and-await (file format on-success)
+  "Render FILE to FORMAT; parse output path from quarto log, call ON-SUCCESS."
+  (let* ((buf-name "*quarto-render*")
+         (local-file file))
+    (when-let ((buf (get-buffer buf-name)))
+      (kill-buffer buf))
+    (let* ((proc-buf (get-buffer-create buf-name))
+           (proc (start-process "quarto-render" proc-buf
+                                "quarto" "render" local-file "--to" format)))
+      (display-buffer proc-buf
+                      '(display-buffer-in-side-window
+                        (side . right)
+                        (window-width . 0.5)))
+      (set-process-sentinel
+       proc
+       (lambda (p _event)
+         (when (eq (process-status p) 'exit)
+           (if (= (process-exit-status p) 0)
+               (let ((out-file
+                      (with-current-buffer (process-buffer p)
+                        (goto-char (point-min))
+                        (when (re-search-forward
+                               "Output created: \\(.+\\)$" nil t)
+                          (expand-file-name
+                           (string-trim (match-string 1))
+                           (file-name-directory local-file))))))
+                 (if out-file
+                     (funcall on-success out-file)
+                   (message "Render succeeded but couldn't find output path in log")))
+             (message "Quarto render FAILED — check *quarto-render* buffer"))))))))
+
+(defun my/quarto--render-and-open (file format)
+  "Render FILE to FORMAT (docx, pptx, epub, odt) then open with system viewer."
+  (my/quarto--render-and-await
+   file format
+   (lambda (out-file)
+     (message "Opening %s..." out-file)
+     (if (eq system-type 'darwin)
+         (start-process "open" nil "open" out-file)
+       (start-process "xdg-open" nil "xdg-open" out-file)))))
+
+(defun my/quarto--open-in-side-window (file)
+  "Open FILE in a right side window — pdf-view for PDF, find-file otherwise."
+  (let ((buf (find-file-noselect file)))
+    (with-current-buffer buf
+      (cond
+       ((and (string-match-p "\\.pdf\\'" file) (featurep 'pdf-tools))
+        (pdf-view-mode)
+        (setq-local pdf-cache-prefetch-delay nil))
+       ((string-match-p "\\.pdf\\'" file)
+        (doc-view-mode))))
+    (display-buffer buf
+                    '(display-buffer-in-side-window
+                      (side . right)
+                      (window-width . 0.5)))))
+
+(defun my/quarto-preview-stop ()
+  "Stop any running quarto preview or render process."
+  (interactive)
+  (when my/quarto--file-notify-descriptor
+    (if (timerp my/quarto--file-notify-descriptor)
+        (cancel-timer my/quarto--file-notify-descriptor)
+      (file-notify-rm-watch my/quarto--file-notify-descriptor))
+    (setq my/quarto--file-notify-descriptor nil)
+    (message "Stopped PDF watcher"))
+  (dolist (buf-name '("*quarto-preview*" "*quarto-render*"))
+    (when-let ((buf (get-buffer buf-name)))
+      (when-let ((proc (get-buffer-process buf)))
+        (delete-process proc)
+        (message "Stopped %s" buf-name)))))
+
+(global-set-key (kbd "C-c q p") #'my/quarto-preview)
+(global-set-key (kbd "C-c q s") #'my/quarto-preview-stop)
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
