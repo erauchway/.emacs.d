@@ -6,7 +6,6 @@
 ;; packages, etc. ;;
 ;;;;;;;;;;;;;;;;;;;;
 
-
 ;; Straight package management
 (setq package-enable-at-startup nil)
 (defvar bootstrap-version)
@@ -22,9 +21,9 @@
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage)
   )
+
 (straight-use-package 'transient)
 (require 'transient)
-
 
 ;; Use-package
 (straight-use-package 'use-package)
@@ -64,29 +63,9 @@
 (keymap-global-set "C-c s" 'yas-insert-snippet)
 (keymap-global-set "C-c f" 'toggle-frame-fullscreen)
 
-
 ;;;;;;;;;;;;;;;;
 ;; Appearance ;;
 ;;;;;;;;;;;;;;;;
-
-;; (use-package gruvbox-theme
-;;   :straight t
-;;   )
-
-
-;; (defun toggle-light-dark-theme ()
-;;   (interactive)
-;;   (let* ((light-theme 'gruvbox-light-hard) ; Your preferred light theme name
-;;          (dark-theme 'gruvbox-dark-soft)   ; Your preferred dark theme name
-;;          (current-theme (car custom-enabled-themes))
-;;          (next-theme (if (eq current-theme light-theme)
-;;                          dark-theme
-;;                        light-theme)))
-;;     (load-theme next-theme t)
-;;     (message "Switched to %s theme" next-theme)))
-
-;; (global-set-key [f5] 'toggle-light-dark-theme)
-
 
 ;; Starting buffer
 (setq inhibit-startup-message t) 
@@ -101,9 +80,10 @@
 (menu-bar-mode -1)
 (scroll-bar-mode -1)
 
-;;;;;;;;;;;;;;;;;;
-;; custom modeline
-;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;
+;; custom modeline ;;
+;;;;;;;;;;;;;;;;;;;;;
+
 (require 'battery)
 (display-battery-mode 1)
 (setq-default mode-line-format
@@ -130,13 +110,17 @@
     ;; time-day-date
     ;;(:eval (propertize (current-time-string) 'face 'shadow))
     (:eval (propertize (format-time-string "%a %e %b %k:%M") 'face 'shadow))
-    (:eval (when (and battery-status-function
-                      (not (string= "N/A" (cdr (assoc ?p (funcall battery-status-function))))))
-             (propertize
-              (format "  🔋%s" (cdr (assoc ?p (funcall battery-status-function))))
-              'face 'shadow)))
-    ))
 
+    ;; UPDATED BATTERY BLOCK
+    (:eval (when battery-status-function
+	     (let* ((status (funcall battery-status-function))
+		    (perc-str (cdr (assoc ?p status)))
+		    (perc-num (if perc-str (string-to-number perc-str) 0))
+		    (icon (if (< perc-num 20) "🪫" "🔋")))
+	       (unless (or (not perc-str) (string= "N/A" perc-str))
+		 (propertize (format " %s%s" icon perc-str)
+			     'face 'shadow))))    
+    )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; various necessities ;;
@@ -157,6 +141,9 @@
 	   company-yasnippet)
 	  (company-abbrev company-dabbrev)))
   )
+
+
+;; hippie-expansion 
 (setq hippie-expand-try-functions-list
 	'(try-complete-file-name-partially
 	  try-complete-file-name
@@ -170,6 +157,8 @@
 	  try-complete-lisp-symbol
 	  )
 	)
+
+;;vertical completions
 (use-package vertico
    :straight t
    :init (vertico-mode)
@@ -180,8 +169,7 @@
  	vertico-resize nil
 	vertico-directory-mode +1)
    )
-;; (with-eval-after-load 'vertico
-;;   (define-key vertico-map (kbd "<backspace>") #'vertico-directory-delete-word))
+
 (use-package vertico-directory
   :after vertico
   :ensure nil
@@ -195,30 +183,46 @@
   :straight t
   :after (vertico)
   )
+
 (use-package marginalia
   :straight t
   :after (vertico)
   :init (marginalia-mode)
   )
+
 (use-package orderless
   :straight t
   :after(vertico)
   :config
   (setq completion-styles '(orderless basic))
   )
+
 (use-package all-the-icons
   :straight t
   :if (display-graphic-p))
+
 (use-package all-the-icons-completion
   :straight t
   :after marginalia
   :hook (marginalia-mode-hook . all-the-icons-completion-marginalia-setup)
   :init (all-the-icons-completion-mode))
+
 (use-package all-the-icons-dired
   :straight t
   :after (all-the-icons)
   :config
   (add-hook 'dired-mode-hook 'all-the-icons-dired-mode)
+  )
+
+;; search plain-text files on disk
+(use-package deft
+  :straight t
+  :config
+  (setq deft-directory "~/writing/notes"
+	deft-recursive t
+	deft-use-filename-as-title t
+	)
+  :bind ("C-c d" . deft)
   )
 
 ;; delimiter highlighting
@@ -243,6 +247,21 @@
   (setq-default gac-automatically-push-p t)
   (setq-default gac-ask-for-summary-p nil)
   )
+
+(defvar my/last-pulled-repo nil)
+
+(defun my/git-pull-if-repo ()
+  "Run git pull if in a git repo, at most once per repo per session."
+  (let ((git-dir (locate-dominating-file default-directory ".git")))
+    (when (and git-dir (not (equal git-dir my/last-pulled-repo)))
+      (setq my/last-pulled-repo git-dir)
+      (let ((default-directory git-dir))
+        (message "Running git pull in %s..." git-dir)
+	(start-process "git-pull" nil "git" "pull")
+	;; (async-shell-command "git pull" "*git-pull*")
+	))))
+
+(add-hook 'find-file-hook #'my/git-pull-if-repo)
 
 ;; swift
 (use-package swift-mode
@@ -276,12 +295,6 @@
   :config
   (setq vterm-shell "/bin/zsh")
   )
-;; (add-to-list 'display-buffer-alist
-;;              '("\\*vterm\\*"
-;;                (display-buffer-in-side-window)
-;;                (side . bottom)
-;;                (slot . 0)
-;;                (window-height . 0.2))) ; 20% height
 
 ;; ido
 (setq ido-enable-flex-matching t
@@ -323,6 +336,9 @@
 			  (side . bottom)
 			  (window-height . 0.3)))))
 
+(add-hook 'magit-pre-display-buffer-hook #'my/magit-auto-fetch-before-display)
+
+
 ;; minimalist writing setup
 (use-package writeroom-mode
   :straight t
@@ -337,23 +353,25 @@
 
 (let* ((pdf-path (expand-file-name "straight/build/pdf-tools/" user-emacs-directory))
        (pdf-bin (expand-file-name "epdfinfo" pdf-path)))
-  
+
   (setq pdf-info-epdfinfo-program pdf-bin)
   (add-to-list 'load-path pdf-path)
 
-  ;; 2. Logic: If the binary is gone (because we deleted it), run a fresh install.
-  ;; If it's there, just try to start it.
   (if (file-exists-p pdf-bin)
-      (with-demoted-errors "PDF Load Error: %s"
-        (require 'pdf-tools)
-        (require 'pdf-view)
-        (pdf-info-process-assert-running))
+      ;; Defer setup to after init — avoids the face_for_font crash at startup
+      (add-hook 'after-init-hook
+                (lambda ()
+                  (with-demoted-errors "PDF Load Error: %s"
+                    (require 'pdf-tools)
+                    (require 'pdf-view)
+                    (pdf-tools-install :no-query))))
     (message "PDF Tools binary missing. Run M-x pdf-tools-install manually.")))
 
-(setq auto-mode-alist (cons '("\\.pdf\\'" . pdf-view-mode) auto-mode-alist))
+;; Keep this outside the let — it's safe to set immediately
+(add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
 
 ;;;;;;;;;;;;;;;;;;;;;;
-;; org and markdown ;;
+;; Org and markdown ;;
 ;;;;;;;;;;;;;;;;;;;;;;
 
 ;; most minimal org package, intended to use for tables only
@@ -380,6 +398,8 @@
   :no-require
   :config (citar-embark-mode)
   )
+
+;; citar for set to current book bib
 (setq citar-bibliography '("~/writing/bibliography/frontiers.json"))
 
 ;; markdown setup
@@ -397,15 +417,14 @@
 		      :foreground "#7393B3"
 		      :weight 'bold))
 
-
-
-
 (use-package request
   :straight t
   )
+
 (use-package yaml-mode
   :straight t
   )
+
 (use-package ess
   :straight t
   :init
@@ -427,12 +446,15 @@
                       (ess-R-fl-keyword:F&T . t)
                       (ess-R-fl-keyword:%op% . t)))
   )
+
 (use-package ess-view-data
   :straight t
   )
+
 (use-package polymode
   :straight t
   )
+
 (use-package poly-markdown
   :straight t
   )
@@ -446,18 +468,9 @@
   :straight t
   )
 
-
-
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup by system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
-;; (use-package gruvbox-theme
-;;   :straight t
-;;   :config
-;;   (load-theme gruvbox-dark-soft t)
-;;   )
 
 (use-package doric-themes
   :straight t
@@ -569,7 +582,7 @@
     :defer t
     :config
     (pdf-tools-install)
-    ;; Tweak these colours to match your doric-dark foreground/background:
+    ;; Tweak these colors to match your doric-dark foreground/background:
     (setq pdf-view-midnight-colors '("#d4c9a8" . "#1e1e1e"))
     (add-hook 'pdf-view-mode-hook
               (lambda ()
@@ -589,43 +602,7 @@
   (setq mac-option-modifier nil)
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
-  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 140))
-;; (when (string= system-name "Erics-Macbook-Air.local")
-;;   ;; Get location from CoreLocationCLI, fall back to hardcoded defaults
-;;   (defun my/set-calendar-location ()
-;;     "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
-;;     (let ((output (shell-command-to-string "CoreLocationCLI -once -format \"%latitude %longitude\"")))
-;;       (if (string-match "\\(-?[0-9]+\\.[0-9]+\\) \\(-?[0-9]+\\.[0-9]+\\)" output)
-;;           (setq calendar-latitude  (string-to-number (match-string 1 output))
-;;                 calendar-longitude (string-to-number (match-string 2 output)))
-;;         (setq calendar-latitude  38.5
-;;               calendar-longitude -121.7))))
-
-;;   (my/set-calendar-location)
-
-;;   ;; base theme by time of day
-;;   (require 'solar)
-;;   (use-package circadian
-;;     :straight t
-;;     :after solar
-;;     :config
-;;     (setq circadian-themes '((:sunrise . doric-light)
-;;                              (:sunset  . doric-dark)))
-;;     (circadian-setup))
-
-;;   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
-
-;;   (defun my-setup-initial-window-setup ()
-;;     "Do initial window setup"
-;;     (interactive)
-;;     (set-face-attribute 'default nil :font "Noto Sans Mono 14"))
-
-;;   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-;;   (setq mac-command-modifier 'meta)
-;;   (setq mac-option-modifier nil)
-;;   (setq mac-control-modifier 'control)
-;;   (setq ispell-program-name "/opt/homebrew/bin/aspell")
-;;   (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 140))
+  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160))
 
 (when (eq system-type 'gnu/linux)
   (defun my-setup-initial-window-setup()
@@ -919,8 +896,6 @@ attribute are processed."
 ;;;;;;;;;;;;;;;;;;;;;
 ;; Quarto Previews ;;
 ;;;;;;;;;;;;;;;;;;;;;
-
-
 
 (defvar my/quarto--file-notify-descriptor nil
   "File notify watch descriptor for the current quarto PDF preview.")
