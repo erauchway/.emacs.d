@@ -468,53 +468,102 @@
   :straight t
   )
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; open docx as pdf to ensure appropriate rendering ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar my/docx-temp-dirs nil
+  "List of temp dirs created for docx viewing.")
+(defun my/docx-open-as-pdf ()
+  "Convert the visited .docx to PDF in a temp dir and open that."
+  (interactive)
+  (let* ((docx buffer-file-name)
+         (tmpdir (make-temp-file "docx-view-" t))
+         (pdf (expand-file-name
+               (concat (file-name-base docx) ".pdf")
+               tmpdir)))
+    (call-process "soffice" nil nil nil
+                  "--headless" "--convert-to" "pdf"
+                  "--outdir" tmpdir docx)
+    (kill-buffer (current-buffer))
+    (find-file pdf)))
+(add-hook 'kill-emacs-hook
+          (lambda ()
+            (dolist (d my/docx-temp-dirs)
+              (when (file-directory-p d)
+                (delete-directory d t)))))
+(add-to-list 'auto-mode-alist '("\\.docx\\'" . my/docx-open-as-pdf))
+
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup by system ;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package doric-themes
-  :straight t
-  )
+  :straight t)
 
+;; ── Shared PDF-tools setup (both Macs) ─────────────────────────────────────
+(when (eq system-type 'darwin)
+  (use-package pdf-tools
+    :straight t
+    :defer t
+    :config
+    (pdf-tools-install)
+    (setq pdf-view-midnight-colors '("#d4c9a8" . "#1e1e1e"))))
+
+(defun my/apply-pdf-theme (variant)
+  "Apply midnight-mode or normal rendering to all open PDF buffers.
+VARIANT is 'light or 'dark."
+  (when (featurep 'pdf-tools)
+    (let ((enable (eq variant 'dark)))
+      (if enable
+          (add-hook 'pdf-view-mode-hook #'pdf-view-midnight-minor-mode)
+        (remove-hook 'pdf-view-mode-hook #'pdf-view-midnight-minor-mode))
+      (dolist (buf (buffer-list))
+        (with-current-buffer buf
+          (when (derived-mode-p 'pdf-view-mode)
+            (pdf-view-midnight-minor-mode (if enable 1 -1))))))))
+
+;; ── Mac Mini: dark in GUI, light in TTY ────────────────────────────────────
 (when (string= system-name "Erics-Mac-mini.local")
   (defun load-my-themes ()
-  (interactive)
-  (cond
-   ((display-graphic-p)
-    ;; Theme for GUI Emacs (e.g., when run locally or via X forwarding)
-    (disable-theme 'doric-light) ;; Disable TTY theme if it was somehow active
-    (load-theme 'doric-dark t))
-   (t
-    ;; Theme for Terminal Emacs (emacs -nw)
-    (disable-theme 'doric-dark) ;; Disable GUI theme
-    (load-theme 'doric-light t))))
-  ;; Add a hook to run the function when Emacs starts up or a new frame is created
-  (add-hook 'after-make-frame-functions (lambda (frame) (with-selected-frame frame (load-my-themes))))
-
-;; Initial call for the first frame
-(load-my-themes)
-  ;; (load-theme 'gruvbox-dark-soft t)
-  (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 130)))
-    (defun my-setup-initial-window-setup()
-    "Do initial window setup"
+    "Load theme based on frame type, and sync PDF midnight mode."
     (interactive)
-    (set-face-attribute 'default nil :font "Noto Sans Mono 14")
-    ;; (org-agenda nil "z")
-    )
+    (cond
+     ((display-graphic-p)
+      (disable-theme 'doric-light)
+      (load-theme 'doric-dark t)
+      (with-eval-after-load 'pdf-tools
+        (my/apply-pdf-theme 'dark)))
+     (t
+      (disable-theme 'doric-dark)
+      (load-theme 'doric-light t)
+      (with-eval-after-load 'pdf-tools
+        (my/apply-pdf-theme 'light)))))
+
+  (add-hook 'after-make-frame-functions
+            (lambda (frame) (with-selected-frame frame (load-my-themes))))
+  (load-my-themes)
+
+  (setq initial-frame-alist '((top . 0) (left . 0) (height . 70) (width . 130)))
+  (defun my-setup-initial-window-setup ()
+    "Do initial window setup."
+    (interactive)
+    (set-face-attribute 'default nil :font "Noto Sans Mono 14"))
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
   (setq mac-command-modifier 'meta)
   (setq mac-option-modifier nil)
   (setq mac-control-modifier 'control)
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
-  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160)
-  )
+  (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160))
 
+;; ── MacBook Air: circadian + toggle ────────────────────────────────────────
 (when (string= system-name "Erics-Macbook-Air.local")
 
-  ;; ── Location ───────────────────────────────────────────────────────────────
+  ;; Location
   (defun my/set-calendar-location ()
     "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
-    (let ((output (shell-command-to-string "CoreLocationCLI -once -format \"%latitude %longitude\"")))
+    (let ((output (shell-command-to-string
+                   "CoreLocationCLI -once -format \"%latitude %longitude\"")))
       (if (string-match "\\(-?[0-9]+\\.[0-9]+\\) \\(-?[0-9]+\\.[0-9]+\\)" output)
           (setq calendar-latitude  (string-to-number (match-string 1 output))
                 calendar-longitude (string-to-number (match-string 2 output)))
@@ -522,30 +571,17 @@
               calendar-longitude -121.7))))
   (my/set-calendar-location)
 
-  ;; ── Theme state ────────────────────────────────────────────────────────────
+  ;; Theme state
   (defvar my/current-theme-variant nil
     "Current theme variant: 'light or 'dark.")
 
-  (defun my/apply-pdf-theme (variant)
-    "Apply midnight-mode or normal rendering to all open PDF buffers."
-    (when (featurep 'pdf-tools)
-      (let ((enable (eq variant 'dark)))
-        (if enable
-            (add-hook 'pdf-view-mode-hook #'pdf-view-midnight-minor-mode)
-          (remove-hook 'pdf-view-mode-hook #'pdf-view-midnight-minor-mode))
-        (dolist (buf (buffer-list))
-          (with-current-buffer buf
-            (when (derived-mode-p 'pdf-view-mode)
-              (pdf-view-midnight-minor-mode (if enable 1 -1))))))))
-
-  ;; Called by the circadian hook (below) and by the manual toggle
   (defun my/sync-theme-variant ()
     "Detect which theme circadian just loaded and sync PDF + state var."
     (let ((variant (if (member 'doric-dark custom-enabled-themes) 'dark 'light)))
       (setq my/current-theme-variant variant)
       (my/apply-pdf-theme variant)))
 
-  ;; ── Toggle ─────────────────────────────────────────────────────────────────
+  ;; Toggle
   (defvar my/theme-override nil
     "When non-nil, circadian hook is suppressed (manual toggle active).")
 
@@ -559,10 +595,9 @@
       (load-theme (if (eq variant 'dark) 'doric-dark 'doric-light) t)
       (my/apply-pdf-theme variant)))
 
-  ;; Cmd-Shift-T  (M = Meta = Cmd given your modifier settings)
   (global-set-key (kbd "M-T") #'my/toggle-light-dark)
 
-  ;; ── Circadian ──────────────────────────────────────────────────────────────
+  ;; Circadian
   (require 'solar)
   (use-package circadian
     :straight t
@@ -571,33 +606,18 @@
     (setq circadian-themes '((:sunrise . doric-light)
                              (:sunset  . doric-dark)))
     (add-hook 'circadian-after-load-theme-hook
-              (lambda (theme)
+              (lambda (_theme)
                 (unless my/theme-override
                   (my/sync-theme-variant))))
     (circadian-setup))
 
-  ;; ── PDF-tools ──────────────────────────────────────────────────────────────
-  (use-package pdf-tools
-    :straight t
-    :defer t
-    :config
-    (pdf-tools-install)
-    ;; Tweak these colors to match your doric-dark foreground/background:
-    (setq pdf-view-midnight-colors '("#d4c9a8" . "#1e1e1e"))
-    (add-hook 'pdf-view-mode-hook
-              (lambda ()
-                (when (eq my/current-theme-variant 'dark)
-                  (pdf-view-midnight-minor-mode 1)))))
-
-  ;; ── Window / font setup ────────────────────────────────────────────────────
+  ;; Window / font setup
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
-
   (defun my-setup-initial-window-setup ()
     "Do initial window setup."
     (interactive)
     (set-face-attribute 'default nil :font "Noto Sans Mono 14"))
   (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-
   (setq mac-command-modifier 'meta)
   (setq mac-option-modifier nil)
   (setq mac-control-modifier 'control)
@@ -605,18 +625,15 @@
   (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160))
 
 (when (eq system-type 'gnu/linux)
-  (defun my-setup-initial-window-setup()
-    "Do initial window setup"
+  (defun my-setup-initial-window-setup ()
+    "Do initial window setup."
     (interactive)
-     (setq initial-frame-alist
-     	'((top . 0) (left . 0) (height . 68) (width . 80)))
-     (set-face-attribute 'default nil :font "Noto Mono 14")
-     ;; (org-agenda nil "z")
-    )
-  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup)
-  )
+    (setq initial-frame-alist
+          '((top . 0) (left . 0) (height . 68) (width . 80)))
+    (set-face-attribute 'default nil :font "Noto Mono 14"))
+  (add-hook 'emacs-startup-hook #'my-setup-initial-window-setup))
 
-
+;; ── CoreLocation helper (available on any Mac) ─────────────────────────────
 (defun my/mac-get-location ()
   "Return (lat . lon) using macOS CoreLocation via pyobjc. No installs needed."
   (condition-case nil
@@ -650,6 +667,8 @@ if d.location:
         (cons (string-to-number (match-string 1 raw))
               (string-to-number (match-string 2 raw))))
     (error (cons 38.5 -121.7))))
+
+
 
 ;; for cleaning whisper transcripts
 (defun transcript-polish ()
