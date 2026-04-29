@@ -508,7 +508,8 @@
     :defer t
     :config
     (pdf-tools-install)
-    (setq pdf-view-midnight-colors '("#d4c9a8" . "#1e1e1e"))))
+    (setq pdf-view-midnight-colors '("#fffaf0" . "#1e1e1e"))))
+    ;; (setq pdf-view-midnight-colors '("#d4c9a8" . "#1e1e1e"))))
 
 (defun my/apply-pdf-theme (variant)
   "Apply midnight-mode or normal rendering to all open PDF buffers.
@@ -1091,6 +1092,14 @@ With prefix argument C-u, always prompt for format selection."
 
 (global-set-key (kbd "C-c q p") #'my/quarto-preview)
 (global-set-key (kbd "C-c q s") #'my/quarto-preview-stop)
+
+
+(add-to-list 'display-buffer-alist
+     '("\*vterm\*"
+       (display-buffer-in-side-window)
+       (window-height . 0.4)
+       (side . bottom)
+       (slot . 0)))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
