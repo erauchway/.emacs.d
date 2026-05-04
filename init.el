@@ -127,21 +127,47 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;completion
-(use-package company
+;; (use-package company
+;;   :straight t
+;;   :config
+;;   (global-company-mode)
+;;   (setq company-show-numbers t
+;; 	company-minimum-prefix-length 1
+;; 	company-idle-delay 1.5
+;; 	company-backends
+;; 	'((company-files
+;; 	   company-keywords
+;; 	   company-capf
+;; 	   company-yasnippet)
+;; 	  (company-abbrev company-dabbrev)))
+;;   )
+
+(use-package corfu
   :straight t
+  :custom
+  (corfu-auto t)
+  (corfu-auto-delay 0.3)
+  (corfu-auto-prefix 2)
+  (corfu-cycle t)
+  (corfu-quit-no-match t)
+  (corfu-left-margin-width 0.5)
+  (corfu-right-margin-width 0.5)
   :config
-  (global-company-mode)
-  (setq company-show-numbers t
-	company-minimum-prefix-length 1
-	company-idle-delay 1.5
-	company-backends
-	'((company-files
-	   company-keywords
-	   company-capf
-	   company-yasnippet)
-	  (company-abbrev company-dabbrev)))
+  (global-corfu-mode)
   )
 
+(use-package corfu-terminal
+  :ensure t
+  :after corfu
+  :config
+  (corfu-terminal-mode +1))
+
+(use-package cape
+  :straight t
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
+  (add-to-list 'completion-at-point-functions #'cape-file    t)
+  )
 
 ;; hippie-expansion 
 (setq hippie-expand-try-functions-list
@@ -465,6 +491,20 @@
    )
 
 (use-package olivetti
+  :straight t
+  )
+
+;; ─── Quarto Studio ───────────────────────────────────────────────────────────
+(load (expand-file-name "quarto-studio.el" user-emacs-directory))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; emacs local webserver ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(use-package simple-httpd
+  :straight t
+  )
+(use-package impatient-mode
   :straight t
   )
 
