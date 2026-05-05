@@ -92,8 +92,7 @@
     (:eval (propertize (buffer-name) 'face 'bold))
     "  "
     ;; position
-    (:eval (propertize "%l:%c"
-		       ))
+    (:eval (propertize "%l:%c" 'face 'shadow))
     "  "
     ;; major mode (stripped of "-mode" suffix for brevity)
     (:eval (propertize
@@ -103,15 +102,14 @@
     ;; word count
     (:eval (propertize
             (format "W:%d" (count-words (point-min) (point-max)))
-            ))
+            'face 'shadow))
     ;; modified indicator
     (:eval (when (buffer-modified-p)
              (propertize "  ●" 'face '(:foreground "yellow"))))
     "  "
     ;; time-day-date
     ;;(:eval (propertize (current-time-string) 'face 'shadow))
-    (:eval (propertize (format-time-string "%a %e %b %k:%M")
-		       ))
+    (:eval (propertize (format-time-string "%a %e %b %k:%M") 'face 'shadow))
 
     ;; UPDATED BATTERY BLOCK
     (:eval (when battery-status-function
@@ -121,7 +119,7 @@
 		    (icon (if (< perc-num 20) "🪫" "🔋")))
 	       (unless (or (not perc-str) (string= "N/A" perc-str))
 		 (propertize (format " %s%s" icon perc-str)
-			     ))))    
+			     'face 'shadow))))    
     )))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -129,52 +127,21 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;completion
-;; (use-package company
-;;   :straight t
-;;   :config
-;;   (global-company-mode)
-;;   (setq company-show-numbers t
-;; 	company-minimum-prefix-length 1
-;; 	company-idle-delay 1.5
-;; 	company-backends
-;; 	'((company-files
-;; 	   company-keywords
-;; 	   company-capf
-;; 	   company-yasnippet)
-;; 	  (company-abbrev company-dabbrev)))
-;;   )
-
-
-(use-package corfu
-  :straight (:host github :repo "minad/corfu")
-  :custom
-  (corfu-auto t)
-  (corfu-auto-delay 0.3)
-  (corfu-auto-prefix 2)
-  (corfu-cycle t)
-  (corfu-quit-no-match t)
-  (corfu-left-margin-width 0.5)
-  (corfu-right-margin-width 0.5)
-  :config
-  (global-corfu-mode)
-  )
-
-
-
-(use-package corfu-terminal
-  :straight (:host codeberg :repo "akib/emacs-corfu-terminal")
-  :after corfu
-  :custom
-  (corfu-terminal-disable-on-gui nil)
-  :config
-  (corfu-terminal-mode +1))
-
-(use-package cape
+(use-package company
   :straight t
-  :init
-  (add-to-list 'completion-at-point-functions #'cape-dabbrev t)
-  (add-to-list 'completion-at-point-functions #'cape-file    t)
+  :config
+  (global-company-mode)
+  (setq company-show-numbers t
+	company-minimum-prefix-length 1
+	company-idle-delay 1.5
+	company-backends
+	'((company-files
+	   company-keywords
+	   company-capf
+	   company-yasnippet)
+	  (company-abbrev company-dabbrev)))
   )
+
 
 ;; hippie-expansion 
 (setq hippie-expand-try-functions-list
@@ -445,22 +412,10 @@
 (add-hook 'markdown-mode-hook #'olivetti-mode)
 (add-hook 'text-mode-hook (lambda ()
 				(setq-local line-spacing 0.2)))
-
 (with-eval-after-load 'markdown-mode
   (set-face-attribute 'markdown-header-face nil
 		      :foreground "#7393B3"
 		      :weight 'bold))
-
-(defun my/cape-file-with-underscore ()
-  (with-syntax-table (copy-syntax-table (syntax-table))
-    (modify-syntax-entry ?_ "_")
-    (cape-file)))
-
-(add-hook 'markdown-mode-hook
-          (lambda ()
-            (setq-local completion-at-point-functions
-                        (cons #'my/cape-file-with-underscore
-                              (remove #'cape-file completion-at-point-functions)))))
 
 (use-package request
   :straight t
@@ -513,20 +468,6 @@
   :straight t
   )
 
-;; ─── Quarto Studio ───────────────────────────────────────────────────────────
-(load (expand-file-name "quarto-studio.el" user-emacs-directory))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; emacs local webserver ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package simple-httpd
-  :straight t
-  )
-(use-package impatient-mode
-  :straight t
-  )
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; open docx as pdf to ensure appropriate rendering ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -558,8 +499,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;
 
 (use-package doric-themes
-  :straight t)
-(use-package gruvbox-theme
   :straight t)
 
 ;; ── Shared PDF-tools setup (both Macs) ─────────────────────────────────────
@@ -620,59 +559,58 @@ VARIANT is 'light or 'dark."
 
 ;; ── MacBook Air: circadian + toggle ────────────────────────────────────────
 (when (string= system-name "Erics-Macbook-Air.local")
-  (load-theme 'gruvbox-dark-soft t)
 
-  ;; ;; Location
-  ;; (defun my/set-calendar-location ()
-  ;;   "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
-  ;;   (let ((output (shell-command-to-string
-  ;;                  "CoreLocationCLI -once -format \"%latitude %longitude\"")))
-  ;;     (if (string-match "\\(-?[0-9]+\\.[0-9]+\\) \\(-?[0-9]+\\.[0-9]+\\)" output)
-  ;;         (setq calendar-latitude  (string-to-number (match-string 1 output))
-  ;;               calendar-longitude (string-to-number (match-string 2 output)))
-  ;;       (setq calendar-latitude  38.5
-  ;;             calendar-longitude -121.7))))
-  ;; (my/set-calendar-location)
+  ;; Location
+  (defun my/set-calendar-location ()
+    "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
+    (let ((output (shell-command-to-string
+                   "CoreLocationCLI -once -format \"%latitude %longitude\"")))
+      (if (string-match "\\(-?[0-9]+\\.[0-9]+\\) \\(-?[0-9]+\\.[0-9]+\\)" output)
+          (setq calendar-latitude  (string-to-number (match-string 1 output))
+                calendar-longitude (string-to-number (match-string 2 output)))
+        (setq calendar-latitude  38.5
+              calendar-longitude -121.7))))
+  (my/set-calendar-location)
 
-  ;; ;; Theme state
-  ;; (defvar my/current-theme-variant nil
-  ;;   "Current theme variant: 'light or 'dark.")
+  ;; Theme state
+  (defvar my/current-theme-variant nil
+    "Current theme variant: 'light or 'dark.")
 
-  ;; (defun my/sync-theme-variant ()
-  ;;   "Detect which theme circadian just loaded and sync PDF + state var."
-  ;;   (let ((variant (if (member 'doric-dark custom-enabled-themes) 'dark 'light)))
-  ;;     (setq my/current-theme-variant variant)
-  ;;     (my/apply-pdf-theme variant)))
+  (defun my/sync-theme-variant ()
+    "Detect which theme circadian just loaded and sync PDF + state var."
+    (let ((variant (if (member 'doric-dark custom-enabled-themes) 'dark 'light)))
+      (setq my/current-theme-variant variant)
+      (my/apply-pdf-theme variant)))
 
-  ;; ;; Toggle
-  ;; (defvar my/theme-override nil
-  ;;   "When non-nil, circadian hook is suppressed (manual toggle active).")
+  ;; Toggle
+  (defvar my/theme-override nil
+    "When non-nil, circadian hook is suppressed (manual toggle active).")
 
-  ;; (defun my/toggle-light-dark ()
-  ;;   "Toggle between light and dark theme, suppressing circadian auto-switch."
-  ;;   (interactive)
-  ;;   (setq my/theme-override t)
-  ;;   (let ((variant (if (eq my/current-theme-variant 'dark) 'light 'dark)))
-  ;;     (setq my/current-theme-variant variant)
-  ;;     (mapc #'disable-theme custom-enabled-themes)
-  ;;     (load-theme (if (eq variant 'dark) 'doric-dark 'doric-light) t)
-  ;;     (my/apply-pdf-theme variant)))
+  (defun my/toggle-light-dark ()
+    "Toggle between light and dark theme, suppressing circadian auto-switch."
+    (interactive)
+    (setq my/theme-override t)
+    (let ((variant (if (eq my/current-theme-variant 'dark) 'light 'dark)))
+      (setq my/current-theme-variant variant)
+      (mapc #'disable-theme custom-enabled-themes)
+      (load-theme (if (eq variant 'dark) 'doric-dark 'doric-light) t)
+      (my/apply-pdf-theme variant)))
 
-  ;; (global-set-key (kbd "M-T") #'my/toggle-light-dark)
+  (global-set-key (kbd "M-T") #'my/toggle-light-dark)
 
-  ;; ;; Circadian
-  ;; (require 'solar)
-  ;; (use-package circadian
-  ;;   :straight t
-  ;;   :after solar
-  ;;   :config
-  ;;   (setq circadian-themes '((:sunrise . doric-light)
-  ;;                            (:sunset  . doric-dark)))
-  ;;   (add-hook 'circadian-after-load-theme-hook
-  ;;             (lambda (_theme)
-  ;;               (unless my/theme-override
-  ;;                 (my/sync-theme-variant))))
-  ;;   (circadian-setup))
+  ;; Circadian
+  (require 'solar)
+  (use-package circadian
+    :straight t
+    :after solar
+    :config
+    (setq circadian-themes '((:sunrise . doric-light)
+                             (:sunset  . doric-dark)))
+    (add-hook 'circadian-after-load-theme-hook
+              (lambda (_theme)
+                (unless my/theme-override
+                  (my/sync-theme-variant))))
+    (circadian-setup))
 
   ;; Window / font setup
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
@@ -1169,8 +1107,7 @@ With prefix argument C-u, always prompt for format selection."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("d445c7b530713eac282ecdeea07a8fa59692c83045bf84dd112dd738c7bcad1d"
-     "4bc34187baf114f1f3de085ffe9510b3c43fe505d21bd52d75bd5aade8c7839e"
+   '("4bc34187baf114f1f3de085ffe9510b3c43fe505d21bd52d75bd5aade8c7839e"
      "6b9fbe5d88424ac7283b8f36b6f184d1140fcd4bfcab1f72a3c58c48dc254bae"
      "9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0"
      "871b064b53235facde040f6bdfa28d03d9f4b966d8ce28fb1725313731a2bcc8"
