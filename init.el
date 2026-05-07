@@ -149,7 +149,7 @@
   :straight (:host github :repo "minad/corfu")
   :custom
   (corfu-auto t)
-  (corfu-auto-delay 0.3)
+  (corfu-auto-delay 0.5)
   (corfu-auto-prefix 2)
   (corfu-cycle t)
   (corfu-quit-no-match t)
@@ -618,7 +618,7 @@ VARIANT is 'light or 'dark."
   (setq ispell-program-name "/opt/homebrew/bin/aspell")
   (set-face-attribute 'variable-pitch nil :family "Noto Sans" :height 160))
 
-;; ── MacBook Air: circadian + toggle ────────────────────────────────────────
+;; ── MacBook Air ────────────────────────────────────────
 (when (string= system-name "Erics-Macbook-Air.local")
   (load-theme 'gruvbox-dark-soft t)
 
@@ -1158,10 +1158,11 @@ With prefix argument C-u, always prompt for format selection."
 
 (add-to-list 'display-buffer-alist
      '("\*vterm\*"
-       (display-buffer-in-side-window)
+       (display-buffer-in-direction)
+       (direction . below)
+       (window . current)
        (window-height . 0.4)
-       (side . bottom)
-       (slot . 0)))
+       ))
 
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
@@ -1169,7 +1170,8 @@ With prefix argument C-u, always prompt for format selection."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("d445c7b530713eac282ecdeea07a8fa59692c83045bf84dd112dd738c7bcad1d"
+   '("4fd1e9da6ff4a6ab7ee4fdc147846f09ce68a543318dd840c7f68205257f32b8"
+     "d445c7b530713eac282ecdeea07a8fa59692c83045bf84dd112dd738c7bcad1d"
      "4bc34187baf114f1f3de085ffe9510b3c43fe505d21bd52d75bd5aade8c7839e"
      "6b9fbe5d88424ac7283b8f36b6f184d1140fcd4bfcab1f72a3c58c48dc254bae"
      "9fb561389e5ac5b9ead13a24fb4c2a3544910f67f12cfcfe77b75f36248017d0"
