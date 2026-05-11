@@ -149,7 +149,7 @@
   :straight (:host github :repo "minad/corfu")
   :custom
   (corfu-auto t)
-  (corfu-auto-delay 0.5)
+  (corfu-auto-delay 0.75)
   (corfu-auto-prefix 2)
   (corfu-cycle t)
   (corfu-quit-no-match t)
