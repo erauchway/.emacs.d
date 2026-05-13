@@ -1,4 +1,4 @@
-;;; quarto-studio.el --- RStudio-like layout for Quarto presentations and PDFs
+;;; quarto-studio.el --- RStudio-like layout for Quarto presentations, PDFs, HTML, and DOCX
 
 ;; ─── Assumptions (all provided by init.el, not repeated here) ────────────────
 ;; quarto-mode, markdown-mode, xwidget-webkit, vertico, consult,
@@ -22,6 +22,7 @@
 
 ;; ─── State ───────────────────────────────────────────────────────────────────
 (defvar qps-source-buffer      nil  "The .qmd source buffer.")
+(defvar qps-preview-window     nil  "The right-hand preview window.")
 (defvar qps-output-buffer-name "*Quarto Output*")
 (defvar qps-preview-process    nil  "The running quarto preview/render process.")
 (defvar qps-preview-port       4848 "Port for quarto preview server (revealjs).")
@@ -29,7 +30,8 @@
 (defvar qps-output-dir         nil  "Resolved output-dir for current project.")
 (defvar qps--detected-url      nil  "Preview URL detected from process output.")
 (defvar qps--detected-pdf      nil  "PDF output path detected from process output.")
-(defvar qps--output-format     nil  "Output format: 'revealjs, 'pdf-latex, or 'pdf-typst.")
+(defvar qps--detected-docx     nil  "DOCX output path detected from process output.")
+(defvar qps--output-format     nil  "Output format: 'revealjs, 'pdf-latex, 'pdf-typst, 'html, or 'docx.")
 
 ;; ─── output-dir resolution ───────────────────────────────────────────────────
 (defun qps--find-quarto-yml ()
@@ -68,7 +70,9 @@
 (defconst qps--format-labels
   '((revealjs  . "revealjs (presentation)")
     (pdf-typst . "typst (PDF)")
-    (pdf-latex . "latex (PDF)"))
+    (pdf-latex . "latex (PDF)")
+    (html      . "html (web page)")
+    (docx      . "docx (Word document)"))
   "Human-readable labels for each output format symbol.")
 
 (defun qps--format-from-label (label)
@@ -89,6 +93,15 @@
               (string-match "format:\\s-*beamer" fm)
               (string-match "pdf:" fm))
       (push 'pdf-latex found))
+    (when (or (string-match "format:\\s-*html\\b" fm)
+              (string-match "^\\s-*html:\\s-*$" fm)    ; standalone `html:` line
+              (string-match "^\\s-*html:\\s-*{" fm))   ; `html: {` inline mapping
+      (push 'html found))
+    (when (or (string-match "format:\\s-*docx\\b" fm)
+              (string-match "format:\\s-*word\\b" fm)
+              (string-match "^\\s-*docx:\\s-*$" fm)
+              (string-match "^\\s-*docx:\\s-*{" fm))
+      (push 'docx found))
     (nreverse found)))
 
 (defun qps--prompt-format (formats)
@@ -122,8 +135,14 @@ Defaults to revealjs when no format can be determined."
                  (t (qps--prompt-format formats)))))))))  ; ask
 
 (defun qps--pdf-format-p ()
-  "Return non-nil when the current document renders to PDF."
+  "Return non-nil when the current document renders to PDF (pdf-tools preview)."
   (memq qps--output-format '(pdf-latex pdf-typst)))
+
+(defun qps--render-format-p ()
+  "Return non-nil when the format uses render-on-save rather than a live server.
+This covers PDF (both engines) and docx.  Plain html uses `quarto preview'
+so that the output is served over HTTP and xwidget-webkit can render it."
+  (memq qps--output-format '(pdf-latex pdf-typst docx)))
 
 ;; ─── Dark-theme detection ────────────────────────────────────────────────────
 (defun qps--dark-theme-p ()
@@ -146,6 +165,7 @@ Checks the background luminance of the default face."
   (delete-other-windows)
   (let* ((right-win (split-window-right (floor (* (frame-width) 0.52))))
          (left-bot  (split-window-below (floor (* (frame-height) 0.67)))))
+    (setq qps-preview-window right-win)
 
     (select-window left-bot)
     (switch-to-buffer (get-buffer-create qps-output-buffer-name))
@@ -155,26 +175,35 @@ Checks the background luminance of the default face."
 
     (select-window right-win)
     (cond
-     ;; revealjs — show the live-preview xwidget or a pending placeholder
-     ((not (qps--pdf-format-p))
+     ;; revealjs and html — live preview server → xwidget
+     ((memq qps--output-format '(revealjs html))
       (if qps-preview-url
           (xwidget-webkit-browse-url qps-preview-url)
         (switch-to-buffer (get-buffer-create "*Quarto Preview (pending)*"))))
-     ;; PDF — show the pdf-tools buffer if one is already open, else placeholder
-     (t
+     ;; PDF — pdf-tools buffer
+     ((qps--pdf-format-p)
       (if-let ((pdf-buf (qps--pdf-tools-buffer)))
           (switch-to-buffer pdf-buf)
-        (switch-to-buffer (get-buffer-create "*Quarto PDF (pending)*")))))
+        (switch-to-buffer (get-buffer-create "*Quarto PDF (pending)*"))))
+     ;; DOCX — doc-view buffer
+     ((eq qps--output-format 'docx)
+      (if-let ((docx-buf (qps--doc-view-buffer)))
+          (switch-to-buffer docx-buf)
+        (switch-to-buffer (get-buffer-create "*Quarto DOCX (pending)*")))))
 
     (select-window (get-buffer-window qps-source-buffer))))
 
 ;; ─── Output buffer helpers ───────────────────────────────────────────────────
+(require 'ansi-color)
+
 (defun qps--output-insert (string)
-  "Append STRING to the output buffer and scroll its window."
+  "Append STRING to the output buffer, render ANSI colour codes, and scroll."
   (with-current-buffer (get-buffer-create qps-output-buffer-name)
     (let ((inhibit-read-only t))
       (goto-char (point-max))
-      (insert string)
+      (let ((start (point)))
+        (insert string)
+        (ansi-color-apply-on-region start (point)))
       (when-let ((win (get-buffer-window (current-buffer) t)))
         (set-window-point win (point-max))))))
 
@@ -188,7 +217,9 @@ Checks the background luminance of the default face."
   "Partial line buffer for quarto process output.")
 
 (defun qps--strip-ansi (string)
-  "Remove ANSI escape sequences from STRING."
+  "Remove ANSI escape sequences from STRING.
+Used to produce clean text for pattern matching in the line buffer;
+display colouring is handled separately by `qps--output-insert'."
   (replace-regexp-in-string "\033\\[[0-9;]*[mK]" "" string))
 
 (defun qps--process-filter (proc string)
@@ -200,15 +231,17 @@ Checks the background luminance of the default face."
       (setq qps--output-line-buffer (car (last lines)))
       (dolist (line (butlast lines))
         (cond
-         ;; revealjs: live-server URL
-         ((and (not (qps--pdf-format-p))
+         ;; revealjs/html: live-server URL — record it; qps--wait-and-open-browser opens the pane.
+         ;; Guard against quarto serving a non-web file when _quarto.yml overrides the format.
+         ((and (memq qps--output-format '(revealjs html))
                (not qps--detected-url)
                (string-match "Browse at \\(http://[^ \n\r]+\\)" line))
-          (let ((url (match-string 1 line)))
-            (setq qps--detected-url (string-trim url))
-            (qps--output-insert (format "\n[detected preview URL: %s]\n"
-                                        qps--detected-url))
-            (qps--open-browser-at qps--detected-url)))
+          (let ((url (string-trim (match-string 1 line))))
+            (if (string-match-p "\\.\\(docx\\|pdf\\|pptx\\|odt\\|rtf\\|epub\\)\\b" url)
+                (qps--output-insert
+                 (format "\n[ignoring non-web browse URL: %s]\n" url))
+              (setq qps--detected-url url)
+              (qps--output-insert (format "\n[detected preview URL: %s]\n" url)))))
          ;; PDF: Quarto emits "Output created: path/to/file.pdf"
          ((and (qps--pdf-format-p)
                (string-match "Output created:\\s-*\\(\\S-+\\.pdf\\)" line))
@@ -222,24 +255,40 @@ Checks the background luminance of the default face."
                                    (buffer-file-name qps-source-buffer)))))))
             (setq qps--detected-pdf pdf-path)
             (qps--output-insert (format "\n[PDF output: %s]\n" pdf-path))
-            (qps--open-pdf-preview pdf-path))))))))
+            (qps--open-pdf-preview pdf-path)))
+         ;; DOCX: "Output created: path/to/file.docx"
+         ((and (eq qps--output-format 'docx)
+               (string-match "Output created:\\s-*\\(\\S-+\\.docx\\)" line))
+          (let* ((raw       (match-string 1 line))
+                 (docx-path (if (file-name-absolute-p raw)
+                                raw
+                              (expand-file-name
+                               raw
+                               (or (qps--find-quarto-yml)
+                                   (file-name-directory
+                                    (buffer-file-name qps-source-buffer)))))))
+            (setq qps--detected-docx docx-path)
+            (qps--output-insert (format "\n[DOCX output: %s]\n" docx-path))
+            (qps--open-docx-preview docx-path))))))))
 
 (defun qps--process-sentinel (proc event)
   (qps--output-insert (format "\n[quarto: %s]\n" (string-trim event))))
 
 ;; ─── revealjs: preview server ────────────────────────────────────────────────
 (defun qps-start-preview-server ()
-  "Start `quarto preview` as a background server (revealjs only)."
+  "Start `quarto preview` as a background server (revealjs/html)."
   (when (and qps-preview-process
              (process-live-p qps-preview-process))
     (kill-process qps-preview-process))
-  (setq qps--detected-url nil)
-  (setq qps--output-line-buffer "")
+  (setq qps--detected-url  nil
+        qps-preview-url    nil   ; clear so layout shows pending buffer, not stale URL
+        qps--output-line-buffer "")
   (qps--resolve-output-dir)
   (let* ((file (buffer-file-name qps-source-buffer))
          (dir  (or (qps--find-quarto-yml)
                    (file-name-directory file)))
          (cmd  `("quarto" "preview" ,file
+                 "--to"   ,(symbol-name qps--output-format)
                  "--port" ,(number-to-string qps-preview-port)
                  "--no-browser"
                  ,@(when qps-output-dir
@@ -258,26 +307,29 @@ Checks the background luminance of the default face."
              :sentinel #'qps--process-sentinel)))))
 
 ;; ─── PDF: render and preview ─────────────────────────────────────────────────
-(defun qps--pdf-engine-args ()
-  "Return --to args for the current output format, or nil."
+(defun qps--render-to-args ()
+  "Return --to args for the current output format, or nil for format default."
   (pcase qps--output-format
     ('pdf-typst  '("--to" "typst"))
     ('pdf-latex  '("--to" "pdf"))
+    ('docx       '("--to" "docx"))
     (_           nil)))
 
 (defun qps-render-pdf ()
-  "Run `quarto render` to produce a PDF from the source buffer."
+  "Run `quarto render` to produce output from the source buffer.
+Works for PDF (latex/typst), HTML, and DOCX formats."
   (when (and qps-preview-process
              (process-live-p qps-preview-process))
     (kill-process qps-preview-process))
-  (setq qps--detected-pdf nil)
+  (setq qps--detected-pdf  nil
+        qps--detected-docx nil)
   (setq qps--output-line-buffer "")
   (qps--resolve-output-dir)
   (let* ((file (buffer-file-name qps-source-buffer))
          (dir  (or (qps--find-quarto-yml)
                    (file-name-directory file)))
          (cmd  `("quarto" "render" ,file
-                 ,@(qps--pdf-engine-args)
+                 ,@(qps--render-to-args)
                  ,@(when qps-output-dir
                      (list "--output-dir" qps-output-dir)))))
     (qps--output-separator (format "quarto render (%s)" qps--output-format))
@@ -310,14 +362,14 @@ Checks the background luminance of the default face."
         (pdf-view-midnight-minor-mode -1)))))
 
 (defun qps--open-pdf-preview (pdf-path)
-  "Open PDF-PATH in the right-hand pane using pdf-tools.
+  "Open PDF-PATH in the preview pane using pdf-tools.
 Applies midnight mode when the active theme is dark."
-  (let ((right-win (window-at (- (frame-width) 2)
-                              (/ (frame-height) 2))))
-    (when right-win
-      (with-selected-window right-win
-        (find-file pdf-path)               ; pdf-tools auto-activates via magic-mode
-        (qps--apply-midnight-mode (current-buffer))))))
+  (let ((win (if (window-live-p qps-preview-window)
+                 qps-preview-window
+               (selected-window))))
+    (with-selected-window win
+      (find-file pdf-path)
+      (qps--apply-midnight-mode (current-buffer)))))
 
 (defun qps--refresh-pdf-preview ()
   "Revert the open pdf-tools buffer to show the freshly rendered PDF.
@@ -330,11 +382,48 @@ Preserves the current page and re-applies midnight mode."
           (pdf-view-goto-page page))
         (qps--apply-midnight-mode (current-buffer))))))
 
-;; ─── Save hook for PDF auto-render ───────────────────────────────────────────
+;; ─── doc-view integration (docx) ─────────────────────────────────────────────
+(defvar qps--doc-view-unoconv-program "/opt/homebrew/bin/unoconv"
+  "Path to the unoconv executable used by doc-view for DOCX conversion.
+Set this to the actual location of unoconv on your system.")
+
+(defun qps--doc-view-buffer ()
+  "Return a live doc-view-mode buffer, if any."
+  (seq-find (lambda (b)
+              (with-current-buffer b
+                (eq major-mode 'doc-view-mode)))
+            (buffer-list)))
+
+(defun qps--open-docx-preview (docx-path)
+  "Open DOCX-PATH in the preview pane using doc-view."
+  (let ((doc-view-odf->pdf-converter-program qps--doc-view-unoconv-program)
+        (win (if (window-live-p qps-preview-window)
+                 qps-preview-window
+               (selected-window))))
+    (with-selected-window win
+      (find-file docx-path))))  ; doc-view auto-activates via magic-mode-alist
+
+(defun qps--refresh-docx-preview ()
+  "Revert the open doc-view buffer to show the freshly rendered DOCX.
+Preserves the current page."
+  (when-let ((docx-buf (qps--doc-view-buffer)))
+    (with-current-buffer docx-buf
+      (let ((page (ignore-errors (doc-view-current-page))))
+        (revert-buffer t t t)
+        (when page
+          ;; doc-view renders asynchronously; wait for pages then jump
+          (run-with-timer
+           0.5 nil
+           (lambda ()
+             (when (buffer-live-p docx-buf)
+               (with-current-buffer docx-buf
+                 (ignore-errors (doc-view-goto-page page)))))))))))
+
+;; ─── Save hook for render-on-save formats ────────────────────────────────────
 (defun qps--after-save-render ()
-  "Re-render the PDF after saving, if in PDF mode and source buffer matches."
+  "Re-render after saving, for all render-on-save formats (PDF, DOCX, HTML)."
   (when (and (buffer-live-p qps-source-buffer)
-             (qps--pdf-format-p)
+             (qps--render-format-p)
              (eq (current-buffer) qps-source-buffer))
     (qps-render-pdf)))
 
@@ -368,12 +457,12 @@ Preserves the current page and re-applies midnight mode."
           (xwidget-webkit-reload))))))
 
 (defun qps--open-browser-at (url)
-  "Open URL in the right-hand xwidget pane."
-  (let ((right-win (window-at (- (frame-width) 2)
-                              (/ (frame-height) 2))))
-    (when right-win
-      (with-selected-window right-win
-        (xwidget-webkit-browse-url url)))))
+  "Open URL in the preview pane using xwidget-webkit."
+  (let ((win (if (window-live-p qps-preview-window)
+                 qps-preview-window
+               (selected-window))))
+    (with-selected-window win
+      (xwidget-webkit-browse-url url))))
 
 (defun qps--wait-and-open-browser (&optional attempts)
   "Poll until the quarto server announces its URL, then open xwidget preview."
@@ -390,31 +479,39 @@ Preserves the current page and re-applies midnight mode."
 ;; ─── Main commands ────────────────────────────────────────────────────────────
 (defun quarto-studio ()
   "Open the three-pane Quarto Studio layout and start the appropriate preview.
-Detects the output format from YAML front matter and routes to either
-the revealjs live-preview server or the PDF render-on-save workflow."
+Detects the output format from YAML front matter and routes to the revealjs
+live-preview server, or the render-on-save workflow for PDF, DOCX, and HTML."
   (interactive)
   (setq qps-source-buffer (current-buffer))  ; must precede detect-format
   (qps--detect-format)
   (qps--remove-save-hook)          ; clean up any previous session hook
+  (setq qps-preview-url nil)       ; ensure layout shows pending buffer, not a stale URL
   (qps-setup-layout)
   (cond
-   ((qps--pdf-format-p)
+   ((qps--render-format-p)
     (qps--install-save-hook)
     (qps-render-pdf)
-    ;; Typst is fast enough to wait a moment then display; latex may need longer
-    (let ((delay (if (eq qps--output-format 'pdf-typst) 3.0 8.0)))
+    ;; Typst is fast; latex is slow; docx (unoconv) is moderate.
+    (let ((delay (pcase qps--output-format
+                   ('pdf-typst 3.0)
+                   ('pdf-latex 8.0)
+                   ('docx      5.0)
+                   (_          5.0))))
       (run-with-timer delay nil
                       (lambda ()
-                        (when qps--detected-pdf
-                          (qps--open-pdf-preview qps--detected-pdf))))))
+                        (cond
+                         ((and (qps--pdf-format-p) qps--detected-pdf)
+                          (qps--open-pdf-preview qps--detected-pdf))
+                         ((and (eq qps--output-format 'docx) qps--detected-docx)
+                          (qps--open-docx-preview qps--detected-docx)))))))
    (t
     (qps-start-preview-server)
     (qps--wait-and-open-browser))))
 
 (defun qps-render-and-preview ()
-  "Manually trigger a render (PDF) or reload (revealjs)."
+  "Manually trigger a render (PDF/DOCX/HTML) or reload (revealjs)."
   (interactive)
-  (if (qps--pdf-format-p)
+  (if (qps--render-format-p)
       (qps-render-pdf)
     (qps--reload-xwidget)))
 
@@ -433,7 +530,7 @@ the revealjs live-preview server or the PDF render-on-save workflow."
   "Kill and restart the preview/render workflow."
   (interactive)
   (qps-kill-preview)
-  (if (qps--pdf-format-p)
+  (if (qps--render-format-p)
       (progn
         (qps--install-save-hook)
         (run-with-timer 0.5 nil #'qps-render-pdf))
@@ -451,7 +548,7 @@ the revealjs live-preview server or the PDF render-on-save workflow."
 (defun qps-switch-format ()
   "Switch the active output format and restart the preview.
 Only offers formats actually declared in the document's front matter,
-falling back to all three if the front matter cannot be parsed."
+falling back to all known formats if the front matter cannot be parsed."
   (interactive)
   (unless (buffer-live-p qps-source-buffer)
     (user-error "No active quarto-studio session"))
@@ -467,8 +564,8 @@ falling back to all three if the front matter cannot be parsed."
                      (buffer-substring-no-properties (point-min) end))))))
          (available (if fm
                         (let ((found (qps--scan-formats fm)))
-                          (if found found '(revealjs pdf-typst pdf-latex)))
-                      '(revealjs pdf-typst pdf-latex)))
+                          (if found found '(revealjs pdf-typst pdf-latex html docx)))
+                      '(revealjs pdf-typst pdf-latex html docx)))
          (new-format (qps--prompt-format available)))
     (unless (eq new-format qps--output-format)
       (setq qps--output-format new-format)
@@ -478,14 +575,21 @@ falling back to all three if the front matter cannot be parsed."
       (qps-kill-preview)
       (qps-setup-layout)
       (cond
-       ((qps--pdf-format-p)
+       ((qps--render-format-p)
         (qps--install-save-hook)
         (qps-render-pdf)
-        (let ((delay (if (eq qps--output-format 'pdf-typst) 3.0 8.0)))
+        (let ((delay (pcase qps--output-format
+                       ('pdf-typst 3.0)
+                       ('pdf-latex 8.0)
+                       ('docx      5.0)
+                       (_          5.0))))
           (run-with-timer delay nil
                           (lambda ()
-                            (when qps--detected-pdf
-                              (qps--open-pdf-preview qps--detected-pdf))))))
+                            (cond
+                             ((and (qps--pdf-format-p) qps--detected-pdf)
+                              (qps--open-pdf-preview qps--detected-pdf))
+                             ((and (eq qps--output-format 'docx) qps--detected-docx)
+                              (qps--open-docx-preview qps--detected-docx)))))))
        (t
         (setq qps--detected-url nil)
         (qps-start-preview-server)
