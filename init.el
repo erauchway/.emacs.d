@@ -570,7 +570,7 @@
     :defer t
     :config
     (pdf-tools-install)
-    (setq pdf-view-midnight-colors '("#fffaf0" . "#1e1e1e"))))
+    (setq pdf-view-midnight-colors '("#ebdbb2" . "#32302f"))))
     ;; (setq pdf-view-midnight-colors '("#d4c9a8" . "#1e1e1e"))))
 
 (defun my/apply-pdf-theme (variant)
