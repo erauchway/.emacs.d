@@ -369,10 +369,6 @@ Applies midnight mode when the active theme is dark."
                (selected-window))))
     (with-selected-window win
       (find-file pdf-path)
-      (setq-local revert-without-query '(""))          ; silence the modtime query
-      (setq-local query-about-changed-file nil)         ; Emacs 28+: skip the prompt entirely
-      (auto-revert-mode -1)                             ; don't let auto-revert fight us
-      (setq-local auto-revert-notify-watch-descriptor nil) ; drop any inotify watch
       (qps--apply-midnight-mode (current-buffer)))))
 
 (defun qps--refresh-pdf-preview ()
@@ -380,9 +376,6 @@ Applies midnight mode when the active theme is dark."
 Preserves the current page and re-applies midnight mode."
   (when-let ((pdf-buf (qps--pdf-tools-buffer)))
     (with-current-buffer pdf-buf
-      (setq-local revert-without-query '(""))
-      (setq-local query-about-changed-file nil)
-      (auto-revert-mode -1)
       (let ((page (ignore-errors (pdf-view-current-page))))
         (revert-buffer t t t)
         (when page
