@@ -129,27 +129,13 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;completion
-;; (use-package company
-;;   :straight t
-;;   :config
-;;   (global-company-mode)
-;;   (setq company-show-numbers t
-;; 	company-minimum-prefix-length 1
-;; 	company-idle-delay 1.5
-;; 	company-backends
-;; 	'((company-files
-;; 	   company-keywords
-;; 	   company-capf
-;; 	   company-yasnippet)
-;; 	  (company-abbrev company-dabbrev)))
-;;   )
 
 
 (use-package corfu
   :straight (:host github :repo "minad/corfu")
   :custom
   (corfu-auto t)
-  (corfu-auto-delay 1)
+  (corfu-auto-delay 2)
   (corfu-auto-prefix 2)
   (corfu-cycle t)
   (corfu-quit-no-match t)
@@ -161,13 +147,6 @@
 
 
 
-(use-package corfu-terminal
-  :straight (:host codeberg :repo "akib/emacs-corfu-terminal")
-  :after corfu
-  :custom
-  (corfu-terminal-disable-on-gui nil)
-  :config
-  (corfu-terminal-mode +1))
 
 (use-package cape
   :straight t
@@ -254,7 +233,8 @@
   (setq deft-directory "~/writing/notes"
 	deft-recursive t
 	deft-use-filename-as-title t
-	deft-default-extension "md"
+	deft-extensions '("md" "qmd" "org" "txt" "docx")
+	;; deft-default-extension "md"
 	)
   :bind ("C-c d" . deft)
   )
@@ -369,6 +349,18 @@
 			'(display-buffer-in-side-window
 			  (side . bottom)
 			  (window-height . 0.3)))))
+
+(defvar my/last-fetched-repo nil
+   "Git repo most recently fetched in this session, to avoid repeated fetches.")
+
+(defun my/magit-auto-fetch-before-display ()
+   "Fetch in the current git repo before showing a magit status buffer."
+   (let ((git-dir (locate-dominating-file default-directory ".git")))
+     (when (and git-dir (not (equal git-dir my/last-fetched-repo)))
+       (setq my/last-fetched-repo git-dir)
+       (let ((default-directory git-dir))
+         (message "Running git fetch in %s..." git-dir)
+	(start-process "git-fetch" nil "git" "fetch")))))
 
 (add-hook 'magit-pre-display-buffer-hook #'my/magit-auto-fetch-before-display)
 
@@ -514,45 +506,7 @@
   :straight t
   )
 
-;; ─── Quarto Studio ───────────────────────────────────────────────────────────
-(load (expand-file-name "quarto-studio.el" user-emacs-directory))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; emacs local webserver ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(use-package simple-httpd
-  :straight t
-  )
-(use-package impatient-mode
-  :straight t
-  )
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; open docx as pdf to ensure appropriate rendering ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defvar my/docx-temp-dirs nil
-  "List of temp dirs created for docx viewing.")
-(defun my/docx-open-as-pdf ()
-  "Convert the visited .docx to PDF in a temp dir and open that."
-  (interactive)
-  (let* ((docx buffer-file-name)
-         (tmpdir (make-temp-file "docx-view-" t))
-         (pdf (expand-file-name
-               (concat (file-name-base docx) ".pdf")
-               tmpdir)))
-    (call-process "soffice" nil nil nil
-                  "--headless" "--convert-to" "pdf"
-                  "--outdir" tmpdir docx)
-    (kill-buffer (current-buffer))
-    (find-file pdf)))
-(add-hook 'kill-emacs-hook
-          (lambda ()
-            (dolist (d my/docx-temp-dirs)
-              (when (file-directory-p d)
-                (delete-directory d t)))))
-(add-to-list 'auto-mode-alist '("\\.docx\\'" . my/docx-open-as-pdf))
 
 ;;;;;;;;;;;;;;;;;;;;;;;
 ;; startup by system ;;
@@ -587,7 +541,7 @@ VARIANT is 'light or 'dark."
             (pdf-view-midnight-minor-mode (if enable 1 -1))))))))
 
 ;; ── Mac Mini: dark in GUI, light in TTY ────────────────────────────────────
-(when (string= system-name "Erics-Mac-mini.local")
+(when (string= system-name "ermacmini.local")
   (defun load-my-themes ()
     "Load theme based on frame type, and sync PDF midnight mode."
     (interactive)
@@ -624,57 +578,6 @@ VARIANT is 'light or 'dark."
 (when (string= system-name "Erics-Macbook-Air.local")
   (load-theme 'gruvbox-dark-soft t)
 
-  ;; ;; Location
-  ;; (defun my/set-calendar-location ()
-  ;;   "Set calendar lat/long from CoreLocationCLI, falling back to defaults."
-  ;;   (let ((output (shell-command-to-string
-  ;;                  "CoreLocationCLI -once -format \"%latitude %longitude\"")))
-  ;;     (if (string-match "\\(-?[0-9]+\\.[0-9]+\\) \\(-?[0-9]+\\.[0-9]+\\)" output)
-  ;;         (setq calendar-latitude  (string-to-number (match-string 1 output))
-  ;;               calendar-longitude (string-to-number (match-string 2 output)))
-  ;;       (setq calendar-latitude  38.5
-  ;;             calendar-longitude -121.7))))
-  ;; (my/set-calendar-location)
-
-  ;; ;; Theme state
-  ;; (defvar my/current-theme-variant nil
-  ;;   "Current theme variant: 'light or 'dark.")
-
-  ;; (defun my/sync-theme-variant ()
-  ;;   "Detect which theme circadian just loaded and sync PDF + state var."
-  ;;   (let ((variant (if (member 'doric-dark custom-enabled-themes) 'dark 'light)))
-  ;;     (setq my/current-theme-variant variant)
-  ;;     (my/apply-pdf-theme variant)))
-
-  ;; ;; Toggle
-  ;; (defvar my/theme-override nil
-  ;;   "When non-nil, circadian hook is suppressed (manual toggle active).")
-
-  ;; (defun my/toggle-light-dark ()
-  ;;   "Toggle between light and dark theme, suppressing circadian auto-switch."
-  ;;   (interactive)
-  ;;   (setq my/theme-override t)
-  ;;   (let ((variant (if (eq my/current-theme-variant 'dark) 'light 'dark)))
-  ;;     (setq my/current-theme-variant variant)
-  ;;     (mapc #'disable-theme custom-enabled-themes)
-  ;;     (load-theme (if (eq variant 'dark) 'doric-dark 'doric-light) t)
-  ;;     (my/apply-pdf-theme variant)))
-
-  ;; (global-set-key (kbd "M-T") #'my/toggle-light-dark)
-
-  ;; ;; Circadian
-  ;; (require 'solar)
-  ;; (use-package circadian
-  ;;   :straight t
-  ;;   :after solar
-  ;;   :config
-  ;;   (setq circadian-themes '((:sunrise . doric-light)
-  ;;                            (:sunset  . doric-dark)))
-  ;;   (add-hook 'circadian-after-load-theme-hook
-  ;;             (lambda (_theme)
-  ;;               (unless my/theme-override
-  ;;                 (my/sync-theme-variant))))
-  ;;   (circadian-setup))
 
   ;; Window / font setup
   (setq initial-frame-alist '((top . 0) (left . 0) (height . 45) (width . 90)))
@@ -759,164 +662,7 @@ if d.location:
       (fill-region (point-min) (point-max)))))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Local alt text via MLX   ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-(defvar quarto-mlx-server-url "http://localhost:8080/v1/chat/completions"
-  "URL for the local MLX vision server.")
-
-(defvar quarto-mlx-model "mlx-community/Qwen3-VL-8B-Instruct-4bit"
-  "Model name to pass to the MLX server. Must match what was loaded.")
-
-(defun quarto--image-to-base64 (path)
-  "Return base64-encoded string of image at PATH."
-  (with-temp-buffer
-    (set-buffer-multibyte nil)
-    (insert-file-contents-literally path)
-    (base64-encode-region (point-min) (point-max) t)
-    (buffer-string)))
-
-(defun quarto--media-type (path)
-  "Return MIME type string for image PATH based on extension."
-  (let ((ext (downcase (file-name-extension path))))
-    (cond
-     ((string= ext "png")  "image/png")
-     ((string= ext "jpg")  "image/jpeg")
-     ((string= ext "jpeg") "image/jpeg")
-     ((string= ext "gif")  "image/gif")
-     ((string= ext "webp") "image/webp")
-     (t "image/png"))))
-
-(defvar quarto-alt-text-script "~/bin/alt_text.py"
-  "Path to the alt_text.py script.")
-
-(defvar quarto-alt-text-python "/Users/earauchway/tmp/ocr_working/ocr_env/bin/python")
-
-(defun quarto-insert-alt-text-local ()
-  "Generate alt text for the Markdown image at point using local mlx_vlm.
-Alt text is written to a {fig-alt=\"...\"} attribute block rather than
-the square-bracket caption field."
-  (interactive)
-  (let* ((line (thing-at-point 'line t))
-         (match (and line (string-match "!\\[[^]]*\\](\\([^)]+\\))" line)))
-         (img-path-raw (and match (match-string 1 line)))
-         (img-path (and img-path-raw
-                        (expand-file-name img-path-raw
-                                          (file-name-directory
-                                           (or buffer-file-name default-directory))))))
-    (unless match
-      (user-error "No Markdown image syntax found on current line"))
-    (unless (and img-path (file-exists-p img-path))
-      (user-error "Image file not found: %s" img-path))
-    (message "Generating alt text for %s (this may take a moment)..."
-             (file-name-nondirectory img-path))
-    (let* ((script (expand-file-name quarto-alt-text-script))
-           (result (shell-command-to-string
-                    (format "%s %s %s"
-                            quarto-alt-text-python
-                            (shell-quote-argument script)
-                            (shell-quote-argument img-path))))
-           (alt-text (replace-regexp-in-string "\"" "\\\\\"" (string-trim result))))
-      (if (string-empty-p alt-text)
-          (message "No alt text returned — check that mlx_vlm is installed")
-        (save-excursion
-          (beginning-of-line)
-          ;; Match the image syntax, then optionally an existing {...} block
-          (when (re-search-forward
-                 "!\\[[^]]*\\](\\([^)]+\\))\\({[^}]*}\\)?"
-                 (line-end-position) t)
-            (let ((attr-start (match-beginning 2))
-                  (attr-end   (match-end 2)))
-              (if (and attr-start attr-end)
-                  ;; A {...} block already exists — update or insert fig-alt inside it
-                  (let ((attrs (match-string 2)))
-                    (if (string-match "fig-alt=\"[^\"]*\"" attrs)
-                        ;; Replace existing fig-alt value
-                        (progn
-                          (delete-region attr-start attr-end)
-                          (insert (replace-regexp-in-string
-                                   "fig-alt=\"[^\"]*\""
-                                   (format "fig-alt=\"%s\"" alt-text)
-                                   attrs)))
-                      ;; Append fig-alt before the closing brace
-                      (delete-region attr-start attr-end)
-                      (insert (replace-regexp-in-string
-                               "}"
-                               (format " fig-alt=\"%s\"}" alt-text)
-                               attrs))))
-                ;; No {...} block — append one after the closing paren
-                (goto-char (match-end 0))
-                (insert (format "{fig-alt=\"%s\"}" alt-text))))))
-        (message "Alt text inserted: %s" alt-text)))))
-
-
-(defun quarto-insert-all-alt-texts ()
-  "Generate and insert alt text for all images in the current buffer.
-Alt text is written to a {fig-alt=\"...\"} attribute block rather than
-the square-bracket caption field.  Only images that lack a fig-alt
-attribute are processed."
-  (interactive)
-  (let* ((base-dir (file-name-directory (or buffer-file-name default-directory)))
-         (images '()))
-    ;; Scan buffer for image lines that have no fig-alt yet
-    (save-excursion
-      (goto-char (point-min))
-      (while (re-search-forward
-              "!\\[[^]]*\\](\\([^)]+\\))\\({[^}]*}\\)?"
-              nil t)
-        (let* ((path-raw  (match-string 1))
-               (attr-block (match-string 2))
-               (path      (expand-file-name path-raw base-dir))
-               (has-alt   (and attr-block
-                               (string-match-p "fig-alt=\"" attr-block))))
-          (when (and (not has-alt) (file-exists-p path))
-            (push (list path path-raw) images)))))
-    (if (null images)
-        (message "No images without fig-alt found.")
-      (message "Generating alt text for %d image(s)..." (length images))
-      (let* ((script (expand-file-name quarto-alt-text-script))
-             (paths (mapcar #'car images))
-             (cmd (concat quarto-alt-text-python " "
-                          (shell-quote-argument script) " "
-                          (mapconcat #'shell-quote-argument paths " ")))
-             (raw-output (shell-command-to-string cmd))
-             (lines (seq-filter (lambda (l) (string-match-p "\t" l))
-                                (split-string raw-output "\n"))))
-        (let ((results (make-hash-table :test 'equal)))
-          (dolist (line lines)
-            (let* ((parts (split-string line "\t"))
-                   (path  (car parts))
-                   (alt   (replace-regexp-in-string "\"" "\\\\\"" (string-trim (cadr parts)))))
-              (puthash path alt results)))
-          ;; Insert alt texts into buffer
-          (save-excursion
-            (goto-char (point-min))
-            (while (re-search-forward
-                    "!\\[[^]]*\\](\\([^)]+\\))\\({[^}]*}\\)?"
-                    nil t)
-              (let* ((path-raw   (match-string 1))
-                     (attr-block (match-string 2))
-                     (path       (expand-file-name path-raw base-dir))
-                     (has-alt    (and attr-block
-                                      (string-match-p "fig-alt=\"" attr-block)))
-                     (alt-text   (gethash path results)))
-                (when (and (not has-alt) alt-text)
-                  (let ((attr-start (match-beginning 2))
-                        (attr-end   (match-end 2)))
-                    (if (and attr-start attr-end)
-                        ;; Append fig-alt into the existing {...} block
-                        (let ((attrs (match-string 2)))
-                          (delete-region attr-start attr-end)
-                          (insert (replace-regexp-in-string
-                                   "}"
-                                   (format " fig-alt=\"%s\"}" alt-text)
-                                   attrs)))
-                      ;; No {...} block — append one
-                      (goto-char (match-end 0))
-                      (insert (format "{fig-alt=\"%s\"}" alt-text)))))))))
-        (message "Done. Alt text inserted for %d image(s)." (length lines))))))
 
 ;; Keybindings
 (with-eval-after-load 'markdown-mode
@@ -934,228 +680,7 @@ attribute are processed."
                quarto-mlx-model)))
     (display-buffer buf)))
 
-;;;;;;;;;;;;;;;;;;;;;;
-;; Quarto Functions ;;
-;;;;;;;;;;;;;;;;;;;;;;
 
-;; for Zotero-annotated Word documents in and out of Quarto/markdown
-
-(defun my/docx-to-md (docx-file)
-  "Convert a Zotero-annotated docx to Quarto markdown."
-  (interactive "fDocx file: ")
-  (let* ((default-directory (file-name-directory docx-file))
-         (md-file (concat (file-name-sans-extension docx-file) ".md"))
-         (cmd (format "python3 /Users/earauchway/writing/zotero_docx_convert.py to-md %s %s"
-                      (shell-quote-argument docx-file)
-                      (shell-quote-argument md-file))))
-    (shell-command cmd)
-    (find-file md-file)
-    (message "Converted to %s" md-file)))
-
-(defun my/insert-quarto-front-matter ()
-  "Insert a Quarto YAML block at the top of the buffer if absent."
-  (unless (save-excursion (goto-char (point-min)) (looking-at "^---"))
-    (goto-char (point-min))
-    (insert "---\nbibliography: ~/path/to/library.bib\n---\n\n")))
-
-(defun my/quarto-render-to-docx ()
-  "Render current Zotero markdown buffer back to docx."
-  (interactive)
-  (save-buffer)
-  (let* ((md-file (buffer-file-name))
-         (default-directory (file-name-directory md-file))
-         (docx-file (read-string "Output docx file: "
-                                    default-directory
-                                    nil nil
-                                    (concat (file-name-base md-file) "_out.docx")))
-         (cmd (format "python3 /Users/earauchway/writing/zotero_docx_convert.py to-docx %s %s"
-                      (shell-quote-argument md-file)
-                      (shell-quote-argument docx-file))))
-    (compile cmd)
-    (message "Written to %s" docx-file)))
-
-(global-set-key (kbd "C-c z i") #'my/docx-to-md)
-(global-set-key (kbd "C-c z o") #'my/quarto-render-to-docx) 
-
-;;;;;;;;;;;;;;;;;;;;;
-;; Quarto Previews ;;
-;;;;;;;;;;;;;;;;;;;;;
-
-(defvar my/quarto--file-notify-descriptor nil
-  "File notify watch descriptor for the current quarto PDF preview.")
-
-(defun my/quarto-get-formats ()
-  "Parse ALL output formats from the current qmd file's YAML front matter."
-  (save-excursion
-    (goto-char (point-min))
-    (when (looking-at "---")
-      (let ((yaml-end (re-search-forward "^---$" nil t)))
-        (when yaml-end
-          (let ((yaml (buffer-substring-no-properties (point-min) yaml-end))
-                (formats '())
-                (known-formats '("revealjs" "pdf" "beamer" "html" "docx"
-                                 "pptx" "epub" "typst" "odt" "gfm"
-                                 "commonmark" "hugo" "jekyll")))
-            (dolist (fmt known-formats)
-              (when (string-match-p (concat "\\(format:.*" fmt
-                                            "\\|^\s*" fmt ":\\)") yaml)
-                (push fmt formats)))
-            (nreverse formats)))))))
-
-(defun my/quarto-select-format ()
-  "Prompt user to select a format from those declared in the qmd front matter."
-  (let ((formats (my/quarto-get-formats)))
-    (if formats
-        (completing-read "Quarto format: " formats nil t)
-      (completing-read "Quarto format (not detected, enter manually): "
-                       '("html" "pdf" "revealjs" "beamer" "docx" "typst")
-                       nil nil))))
-
-(defun my/quarto-preview (&optional prompt-format)
-  "Preview current qmd file, prompting for format if multiple are declared.
-With prefix argument C-u, always prompt for format selection."
-  (interactive "P")
-  (let* ((file (buffer-file-name))
-         (formats (my/quarto-get-formats))
-         (format
-          (cond
-           (prompt-format          (my/quarto-select-format))
-           ((> (length formats) 1) (my/quarto-select-format))
-           ((= (length formats) 1) (car formats))
-           (t                      (my/quarto-select-format)))))
-    (unless (and file (string-match-p "\\.qmd\\'" file))
-      (user-error "Not visiting a .qmd file"))
-    (message "Previewing as %s..." format)
-    (pcase format
-      ((or "revealjs" "html" "gfm" "commonmark" "hugo" "jekyll")
-       (my/quarto--start-preview file format))
-      ((or "pdf" "beamer" "typst")
-       (my/quarto--render-pdf file format))
-      ((or "docx" "pptx" "epub" "odt")
-       (my/quarto--render-and-open file format))
-      (_ (my/quarto--start-preview file format)))))
-
-(defun my/quarto--start-preview (file format)
-  "Launch quarto preview server for FILE with FORMAT in a side window."
-  (let ((buf-name "*quarto-preview*"))
-    (when-let ((buf (get-buffer buf-name)))
-      (when-let ((proc (get-buffer-process buf)))
-        (delete-process proc))
-      (kill-buffer buf))
-    (let ((proc-buf (get-buffer-create buf-name)))
-      (start-process "quarto-preview" proc-buf
-                     "quarto" "preview" file
-                     "--to" format
-                     "--no-browser" "--no-watch-inputs")
-      (display-buffer proc-buf
-                      '(display-buffer-in-side-window
-                        (side . right)
-                        (window-width . 0.5))))))
-
-(defun my/quarto--render-pdf (file format)
-  "Render FILE to FORMAT and open the result in a side window."
-  (let* ((buf-name "*quarto-render*")
-         (local-file file))
-    (when-let ((buf (get-buffer buf-name)))
-      (kill-buffer buf))
-    (let* ((proc-buf (get-buffer-create buf-name))
-           (proc (start-process "quarto-render" proc-buf
-                                "quarto" "render" local-file "--to" format)))
-      (display-buffer proc-buf
-                      '(display-buffer-in-side-window
-                        (side . right)
-                        (window-width . 0.5)))
-      (set-process-sentinel
-       proc
-       (lambda (p _event)
-         (when (eq (process-status p) 'exit)
-           (if (= (process-exit-status p) 0)
-               (let ((pdf-file
-                      (with-current-buffer (process-buffer p)
-                        (goto-char (point-min))
-                        (when (re-search-forward
-                               "Output created: \\(.+\\)$" nil t)
-                          (expand-file-name
-                           (string-trim (match-string 1))
-                           (file-name-directory local-file))))))
-                 (if pdf-file
-                     (my/quarto--open-in-side-window pdf-file)
-                   (message "Render succeeded but couldn't find output path in log")))
-             (message "Quarto render FAILED — check *quarto-render* buffer"))))))))
-
-(defun my/quarto--render-and-await (file format on-success)
-  "Render FILE to FORMAT; parse output path from quarto log, call ON-SUCCESS."
-  (let* ((buf-name "*quarto-render*")
-         (local-file file))
-    (when-let ((buf (get-buffer buf-name)))
-      (kill-buffer buf))
-    (let* ((proc-buf (get-buffer-create buf-name))
-           (proc (start-process "quarto-render" proc-buf
-                                "quarto" "render" local-file "--to" format)))
-      (display-buffer proc-buf
-                      '(display-buffer-in-side-window
-                        (side . right)
-                        (window-width . 0.5)))
-      (set-process-sentinel
-       proc
-       (lambda (p _event)
-         (when (eq (process-status p) 'exit)
-           (if (= (process-exit-status p) 0)
-               (let ((out-file
-                      (with-current-buffer (process-buffer p)
-                        (goto-char (point-min))
-                        (when (re-search-forward
-                               "Output created: \\(.+\\)$" nil t)
-                          (expand-file-name
-                           (string-trim (match-string 1))
-                           (file-name-directory local-file))))))
-                 (if out-file
-                     (funcall on-success out-file)
-                   (message "Render succeeded but couldn't find output path in log")))
-             (message "Quarto render FAILED — check *quarto-render* buffer"))))))))
-
-(defun my/quarto--render-and-open (file format)
-  "Render FILE to FORMAT (docx, pptx, epub, odt) then open with system viewer."
-  (my/quarto--render-and-await
-   file format
-   (lambda (out-file)
-     (message "Opening %s..." out-file)
-     (if (eq system-type 'darwin)
-         (start-process "open" nil "open" out-file)
-       (start-process "xdg-open" nil "xdg-open" out-file)))))
-
-(defun my/quarto--open-in-side-window (file)
-  "Open FILE in a right side window — pdf-view for PDF, find-file otherwise."
-  (let ((buf (find-file-noselect file)))
-    (with-current-buffer buf
-      (cond
-       ((and (string-match-p "\\.pdf\\'" file) (featurep 'pdf-tools))
-        (pdf-view-mode)
-        (setq-local pdf-cache-prefetch-delay nil))
-       ((string-match-p "\\.pdf\\'" file)
-        (doc-view-mode))))
-    (display-buffer buf
-                    '(display-buffer-in-side-window
-                      (side . right)
-                      (window-width . 0.5)))))
-
-(defun my/quarto-preview-stop ()
-  "Stop any running quarto preview or render process."
-  (interactive)
-  (when my/quarto--file-notify-descriptor
-    (if (timerp my/quarto--file-notify-descriptor)
-        (cancel-timer my/quarto--file-notify-descriptor)
-      (file-notify-rm-watch my/quarto--file-notify-descriptor))
-    (setq my/quarto--file-notify-descriptor nil)
-    (message "Stopped PDF watcher"))
-  (dolist (buf-name '("*quarto-preview*" "*quarto-render*"))
-    (when-let ((buf (get-buffer buf-name)))
-      (when-let ((proc (get-buffer-process buf)))
-        (delete-process proc)
-        (message "Stopped %s" buf-name)))))
-
-(global-set-key (kbd "C-c q p") #'my/quarto-preview)
-(global-set-key (kbd "C-c q s") #'my/quarto-preview-stop)
 
 
 (add-to-list 'display-buffer-alist
@@ -1172,7 +697,12 @@ With prefix argument C-u, always prompt for format selection."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("4fd1e9da6ff4a6ab7ee4fdc147846f09ce68a543318dd840c7f68205257f32b8"
+   '("1e6afb4c31e36861e75c6339036ccc2ae193798b77cc1d6e953f476f1febad72"
+     "366f7fb70999d739ff559568b011f8cfb05c88124e4c944e5e1008312e572137"
+     "c5b2e31f3179e32468e15546526c127f9f60c05a3d84fd5fd7cb66f20871d2bd"
+     "106fadeab4fb8cf50eeae1e1fd051ae00d0e71a40b5b0f0f5b9db85015398a61"
+     "d288d79cf8d8a852ac7ffabdfe7a5cace9b4985565cb5a16dbf89bb4d6a00d8d"
+     "4fd1e9da6ff4a6ab7ee4fdc147846f09ce68a543318dd840c7f68205257f32b8"
      "d445c7b530713eac282ecdeea07a8fa59692c83045bf84dd112dd738c7bcad1d"
      "4bc34187baf114f1f3de085ffe9510b3c43fe505d21bd52d75bd5aade8c7839e"
      "6b9fbe5d88424ac7283b8f36b6f184d1140fcd4bfcab1f72a3c58c48dc254bae"
